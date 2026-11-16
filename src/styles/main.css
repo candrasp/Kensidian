@@ -1,0 +1,365 @@
+/* Hilangkan outline fokus bawaan browser/WebView2 secara global */
+*:focus,
+*:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+@import "tailwindcss";
+@import "./fonts.css";
+@import "./editor.css";
+
+/* ---------- 1. Nilai mentah per tema (Deep Charcoal Glare-Reduction) ---------- */
+:root,
+:root[data-theme="dark"],
+:root[data-scheme="nord"] {
+  color-scheme: dark;
+  --bg-app:        #2e3440;   /* Latar belakang kanvas */
+  --bg-panel:      #272b35;   /* Sidebar & header navigasi */
+  --bg-panel-alt:  #3b4252;   /* Kartu, menu popup */
+  --bg-code:       #3b4252;   /* Blok kode */
+  --bg-hover:      #3b4252;   /* Hover state */
+  --bg-selected:   #4c566a;   /* Selected item */
+  --bg-scrim:      rgba(39, 43, 53, 0.65);
+  --line:          #4c566a;   /* Batas garis pemisah */
+  --line-strong:   #4c566a;
+  --fg:            #d8dee9;   /* Latar depan (teks utama teduh) */
+  --fg-muted:      #9aa2b2;   /* Teks sekunder */
+  --fg-faint:      #616e88;   /* Simbol markdown & token faint */
+  --accent:        #88c0d0;   /* Primer / Sian */
+  --accent-hover:  #81a1c1;   /* Biru */
+  --accent-soft:   rgba(136, 192, 208, 0.16);
+  --accent-fg:     #2e3440;
+  --danger:        #bf616a;   /* Merah */
+  --success:       #a3be8c;   /* Hijau */
+  --warning:       #ebcb8b;   /* Kuning */
+  --selection:     rgba(136, 192, 208, 0.28);
+
+  /* Hirarki Heading Nord */
+  --h1: #88c0d0;   /* Sian */
+  --h2: #81a1c1;   /* Biru */
+  --h3: #ebcb8b;   /* Kuning */
+  --h4: #a3be8c;   /* Hijau */
+  --h5: #b48ead;   /* Magenta */
+  --h6: #d8dee9;   /* Latar depan */
+
+  /* sintaks kode One Dark Soft */
+  --syn-comment:  #5c6370;   /* Muted Slate Gray (italic) */
+  --syn-keyword:  #c678dd;   /* Soft Violet */
+  --syn-string:   #98c379;   /* Soft Sage Green */
+  --syn-number:   #d19a66;   /* Warm Terracotta */
+  --syn-function: #61afef;   /* Soft Sky Blue */
+  --syn-type:     #e5c07b;   /* Vanilla Gold */
+  --syn-heading:  #88c0d0;   /* Sian */
+  --syn-marker:   #5c6370;
+  --syn-link:     #61afef;   /* Soft Sky Blue */
+  --syn-meta:     #5c6370;
+
+  /* ikon warna (§5.8) */
+  --icon-red:     #bf616a;
+  --icon-orange:  #ebcb8b;
+  --icon-yellow:  #ebcb8b;
+  --icon-green:   #a3be8c;
+  --icon-teal:    #88c0d0;
+  --icon-blue:    #81a1c1;
+  --icon-purple:  #b48ead;
+  --icon-pink:    #b48ead;
+  --icon-gray:    #9aa2b2;
+}
+
+/* Skema Warna: One Dark Soft */
+:root[data-scheme="onedark"] {
+  --bg-app:        #21252b;
+  --bg-panel:      #1e2227;
+  --bg-panel-alt:  #282c34;
+  --bg-code:       #282c34;
+  --bg-hover:      #2c313a;
+  --bg-selected:   #3e4451;
+  --line:          #3e4451;
+  --line-strong:   #4b5263;
+  --fg:            #abb2bf;
+  --fg-muted:      #828997;
+  --fg-faint:      #5c6370;
+  --accent:        #61afef;
+  --accent-hover:  #4fa1e2;
+  --accent-soft:   rgba(97, 175, 239, 0.16);
+  --accent-fg:     #21252b;
+  --h1: #61afef;
+  --h2: #c678dd;
+  --h3: #d19a66;
+  --h4: #e5c07b;
+  --h5: #98c379;
+  --h6: #abb2bf;
+}
+
+/* Skema Warna: Obsidian Minimal Charcoal */
+:root[data-scheme="minimal"] {
+  --bg-app:        #18181a;
+  --bg-panel:      #141416;
+  --bg-panel-alt:  #202022;
+  --bg-code:       #202022;
+  --bg-hover:      #28282b;
+  --bg-selected:   #323236;
+  --line:          #2f2f33;
+  --line-strong:   #3e3e44;
+  --fg:            #e4e4e7;
+  --fg-muted:      #919199;
+  --fg-faint:      #5a5a62;
+  --accent:        #a78bfa;
+  --accent-hover:  #c4b5fd;
+  --accent-soft:   rgba(167, 139, 250, 0.16);
+  --accent-fg:     #18181a;
+  --h1: #e4e4e7;
+  --h2: #d4d4d8;
+  --h3: #a78bfa;
+  --h4: #a1a1aa;
+  --h5: #71717a;
+  --h6: #52525b;
+}
+
+/* Skema Warna: Tokyo Night Storm (Malam Elegan) */
+:root[data-scheme="tokyonight"] {
+  --bg-app:        #24283b;
+  --bg-panel:      #1f2335;
+  --bg-panel-alt:  #292e42;
+  --bg-code:       #1f2335;
+  --bg-hover:      #2e344e;
+  --bg-selected:   #3b4261;
+  --line:          #3b4261;
+  --line-strong:   #545c7e;
+  --fg:            #c0caf5;
+  --fg-muted:      #9aa5ce;
+  --fg-faint:      #565f89;
+  --accent:        #7aa2f7;
+  --accent-hover:  #89ddff;
+  --accent-soft:   rgba(122, 162, 247, 0.16);
+  --accent-fg:     #1f2335;
+  --h1: #7aa2f7;
+  --h2: #bb9af7;
+  --h3: #7dcfff;
+  --h4: #9ece6a;
+  --h5: #e0af68;
+  --h6: #a9b1d6;
+}
+
+/* Skema Warna: Catppuccin Macchiato (Pastel Lembut) */
+:root[data-scheme="catppuccin"] {
+  --bg-app:        #24273a;
+  --bg-panel:      #1e2030;
+  --bg-panel-alt:  #363a4f;
+  --bg-code:       #1e2030;
+  --bg-hover:      #363a4f;
+  --bg-selected:   #494d64;
+  --line:          #363a4f;
+  --line-strong:   #494d64;
+  --fg:            #cad3f5;
+  --fg-muted:      #a5adcb;
+  --fg-faint:      #6e738d;
+  --accent:        #8bd5ca;
+  --accent-hover:  #91d7e3;
+  --accent-soft:   rgba(139, 213, 202, 0.16);
+  --accent-fg:     #1e2030;
+  --h1: #8bd5ca;
+  --h2: #8aadf4;
+  --h3: #c6a0f6;
+  --h4: #a6da95;
+  --h5: #eed49f;
+  --h6: #b8c0e0;
+}
+
+/* Skema Warna: Warm Sepia Paper (Kertas Buku Antik) */
+:root[data-scheme="sepia"] {
+  --bg-app:        #24211e;
+  --bg-panel:      #1d1a18;
+  --bg-panel-alt:  #2f2b27;
+  --bg-code:       #1d1a18;
+  --bg-hover:      #38332e;
+  --bg-selected:   #4a443d;
+  --line:          #3d3731;
+  --line-strong:   #544c44;
+  --fg:            #dfd6c8;
+  --fg-muted:      #a89f91;
+  --fg-faint:      #736b60;
+  --accent:        #e0af68;
+  --accent-hover:  #ebc282;
+  --accent-soft:   rgba(224, 175, 104, 0.16);
+  --accent-fg:     #1d1a18;
+  --h1: #f3ebd9;
+  --h2: #a9c4a5;
+  --h3: #dfa789;
+  --h4: #d2b48c;
+  --h5: #c7beaf;
+  --h6: #968c7e;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg-app: #ffffff;  --bg-panel: #f6f6f6;  --bg-panel-alt: #efefef;  --bg-code: #f3f3f3;
+  --bg-hover: rgba(0,0,0,.05);  --bg-selected: rgba(0,0,0,.09);  --bg-scrim: rgba(0,0,0,.35);
+  --line: #e0e0e0;  --line-strong: #c8c8c8;
+  --fg: #222222;  --fg-muted: #5c5c5c;  --fg-faint: #ababab;
+  --accent: #705dcf;  --accent-hover: #5f4cc0;  --accent-soft: rgba(112,93,207,.15);  --accent-fg: #ffffff;
+  --danger: #e93147;  --success: #08b94e;  --warning: #bb8a00;  --selection: rgba(112,93,207,.25);
+  --h1: #2563eb;           /* Deep Blue */
+  --h2: #7c3aed;           /* Deep Violet */
+  --h3: #ea580c;           /* Warm Amber */
+  --h4: #16a34a;           /* Forest Green */
+  --h5: #db2777;           /* Rose */
+  --h6: var(--fg-muted);   /* Muted Gray */
+
+  --syn-comment: #8a8f98; --syn-keyword: #a626a4; --syn-string: #50a14f; --syn-number: #986801;
+  --syn-function: #4078f2; --syn-type: #c18401; --syn-heading: #c2410c; --syn-marker: #0184bc;
+  --syn-link: #3d5fd4; --syn-meta: #8a8f98;
+
+  --icon-red:     #e93147;
+  --icon-orange:  #c2410c;
+  --icon-yellow:  #bb8a00;
+  --icon-green:   #08b94e;
+  --icon-teal:    #0184bc;
+  --icon-blue:    #3d5fd4;
+  --icon-purple:  #705dcf;
+  --icon-pink:    #d946ef;
+  --icon-gray:    #5c5c5c;
+}
+
+/* ---------- 2. Daftarkan sebagai utilitas Tailwind ---------- */
+@theme inline {
+  --color-app: var(--bg-app);
+  --color-panel: var(--bg-panel);
+  --color-panel-alt: var(--bg-panel-alt);
+  --color-code: var(--bg-code);
+  --color-hover: var(--bg-hover);
+  --color-selected: var(--bg-selected);
+  --color-scrim: var(--bg-scrim);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-faint: var(--fg-faint);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-fg: var(--accent-fg);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+
+  --color-icon-red: var(--icon-red);
+  --color-icon-orange: var(--icon-orange);
+  --color-icon-yellow: var(--icon-yellow);
+  --color-icon-green: var(--icon-green);
+  --color-icon-teal: var(--icon-teal);
+  --color-icon-blue: var(--icon-blue);
+  --color-icon-purple: var(--icon-purple);
+  --color-icon-pink: var(--icon-pink);
+  --color-icon-gray: var(--icon-gray);
+}
+
+/* ---------- 3. Token non-warna ---------- */
+@theme {
+  --font-ui:   "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-text: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 16px;
+
+  --shadow-modal: 0 10px 40px rgba(0,0,0,.45);
+  --shadow-menu:  0 4px 16px rgba(0,0,0,.35);
+
+  --ease-ui: cubic-bezier(.2,0,0,1);
+}
+
+/* ---------- 4. Dimensi (acuan) sebagai CSS variable ---------- */
+:root {
+  --titlebar-h: 32px;
+  --header-h: 40px;
+  --file-toolbar-h: 36px;
+  --footer-h: 40px;
+  --statusbar-h: 24px;
+  --sidebar-w: 220px;
+  --right-sidebar-w: 280px;
+  --tree-row-h: 22px;
+  --tree-indent: 12px;
+  --file-line-width: 900px;
+  --icon-s: 16px;
+  --icon-m: 18px;
+  --icon-stroke: 1.75;
+  --font-size-ui-s: 12px;
+  --font-size-ui-m: 13px;
+  --font-size-ui-l: 15px;
+  --font-size-text: 16px;
+}
+
+/* ---------- 5. Scrollbar Minimalis & Ramping ---------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--line);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--line-strong);
+}
+
+/* Hilangkan panah scrollbar */
+::-webkit-scrollbar-button {
+  display: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Utilitas sembunyikan scrollbar */
+.scrollbar-none {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Scrollbar auto-hide untuk sidebar: hanya muncul saat di-hover */
+[role="tree"] {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.2s ease;
+}
+
+[role="tree"]:hover {
+  scrollbar-color: var(--line) transparent;
+}
+
+[role="tree"]::-webkit-scrollbar {
+  width: 3px;
+}
+
+[role="tree"]::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+}
+
+[role="tree"]:hover::-webkit-scrollbar-thumb {
+  background-color: var(--line);
+}
+
+[role="tree"]:hover::-webkit-scrollbar-thumb:hover {
+  background-color: var(--line-strong);
+}

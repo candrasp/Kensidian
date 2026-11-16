@@ -1,0 +1,637 @@
+/* styles/editor.css - Gaya Tipografi Mode View (.view-content) */
+
+.view-content {
+  color: var(--fg);
+  font-family: var(--font-text);
+  font-size: var(--font-size-text, 16px);
+  line-height: 1.65;
+  letter-spacing: 0.005em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.view-content h1 {
+  color: var(--h1);
+  font-size: 28px;
+  font-weight: 700;
+  margin: 32px 0 14px;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.view-content h2 {
+  color: var(--h2);
+  font-size: 22px;
+  font-weight: 600;
+  margin: 28px 0 12px;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.view-content h3 {
+  color: var(--h3);
+  font-size: 18px;
+  font-weight: 600;
+  margin: 24px 0 10px;
+  line-height: 1.40;
+}
+
+.view-content h4 {
+  color: var(--h4);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 20px 0 8px;
+}
+
+.view-content h5 {
+  color: var(--h5);
+  font-size: 14.5px;
+  font-weight: 600;
+  margin: 16px 0 8px;
+}
+
+.view-content h6 {
+  color: var(--h6);
+  font-size: 13.5px;
+  font-weight: 600;
+  margin: 16px 0 8px;
+}
+
+.view-content p {
+  margin: 0 0 16px;
+  line-height: 1.65;
+}
+
+.view-content strong,
+.view-content b {
+  font-weight: 600;
+  color: rgba(224, 108, 117, 0.9);
+}
+
+.view-content code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background-color: rgba(255, 255, 255, 0.03);
+  /* Latar sangat tipis dan transparan */
+  color: #a3be8c;
+  /* Hijau sage lembut */
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.view-content ul {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin: 0 0 16px;
+}
+
+.view-content ol {
+  list-style-type: decimal;
+  padding-left: 20px;
+  margin: 0 0 16px;
+}
+
+.view-content li {
+  margin: 8px 0;
+}
+
+/* ── Task List & Custom Checkboxes (Obsidian Style) ── */
+.view-content li.task-list-item {
+  list-style-type: none;
+  position: relative;
+  margin-left: -20px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  line-height: 1.65;
+}
+
+.view-content li.task-list-item.is-checked,
+.view-content li.task-list-item.is-cancelled {
+  color: var(--fg-muted);
+  text-decoration: line-through;
+}
+
+/* Checkbox base (Mode View & Mode Edit CodeMirror) */
+.task-checkbox {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1.5px solid var(--line-strong);
+  background-color: var(--bg-app);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 700;
+  vertical-align: middle;
+  margin-top: -2px;
+  margin-right: 6px;
+}
+
+.cm-task-checkbox {
+  margin-right: 6px;
+  margin-left: 2px;
+}
+
+.task-checkbox:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+/* [ ] Belum Selesai (Empty) */
+.task-checkbox[data-task=" "] {
+  border-color: var(--line-strong);
+}
+
+/* [x] Selesai (Done) */
+.task-checkbox[data-task="x"] {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+}
+.task-checkbox[data-task="x"]::after {
+  content: '✓';
+  font-size: 11px;
+  font-weight: 800;
+}
+
+/* [/] Sedang Berjalan (In Progress) */
+.task-checkbox[data-task="/"] {
+  border-color: #61afef;
+  color: #61afef;
+  background-color: rgba(97, 175, 239, 0.15);
+}
+.task-checkbox[data-task="/"]::after {
+  content: '/';
+  font-size: 11px;
+}
+
+/* [-] Dibatalkan (Cancelled) */
+.task-checkbox[data-task="-"] {
+  border-color: #9aa2b2;
+  color: #9aa2b2;
+  background-color: rgba(154, 162, 178, 0.15);
+}
+.task-checkbox[data-task="-"]::after {
+  content: '−';
+  font-size: 12px;
+}
+
+/* [>] Ditunda (Rescheduled) */
+.task-checkbox[data-task=">"] {
+  border-color: #c678dd;
+  color: #c678dd;
+  background-color: rgba(198, 120, 221, 0.15);
+}
+.task-checkbox[data-task=">"]::after {
+  content: '>';
+  font-size: 10px;
+}
+
+/* [i] Informasi (Info) */
+.task-checkbox[data-task="i"] {
+  border-color: #56b6c2;
+  color: #56b6c2;
+  background-color: rgba(86, 182, 194, 0.15);
+  font-family: serif;
+  font-style: italic;
+}
+.task-checkbox[data-task="i"]::after {
+  content: 'i';
+  font-size: 11px;
+}
+
+/* [?] Pertanyaan / Klarifikasi */
+.task-checkbox[data-task="?"] {
+  border-color: #e5c07b;
+  color: #e5c07b;
+  background-color: rgba(229, 192, 123, 0.15);
+}
+.task-checkbox[data-task="?"]::after {
+  content: '?';
+  font-size: 11px;
+}
+
+/* [!] Penting / Mendesak (Important) */
+.task-checkbox[data-task="!"] {
+  border-color: #e06c75;
+  color: #e06c75;
+  background-color: rgba(224, 108, 117, 0.15);
+}
+.task-checkbox[data-task="!"]::after {
+  content: '!';
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.view-content blockquote {
+  border-left: 3px solid var(--accent);
+  padding: 8px 16px;
+  background-color: var(--bg-panel-alt);
+  border-radius: 0 8px 8px 0;
+  color: var(--fg-muted);
+  margin: 0 0 16px;
+}
+
+.view-content a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.view-content a:hover {
+  text-decoration: underline;
+}
+
+
+
+.view-content pre {
+  margin: 0 0 16px;
+  overflow-x: auto;
+}
+
+.view-content pre code {
+  background-color: transparent;
+  color: #abb2bf;
+  /* Standar One Dark/Obsidian: abu-abu pastel lembut, tidak silau putih murni */
+  padding: 0;
+  border-radius: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.view-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0 0 16px;
+  font-size: 14px;
+  overflow: hidden;
+}
+
+.view-content th {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--line);
+  padding: 8px 12px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.view-content td {
+  border: 1px solid var(--line);
+  padding: 8px 12px;
+}
+
+.view-content hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 2em 0;
+}
+
+.view-content code:not(pre code) {
+  background: var(--bg-code);
+  border-radius: var(--radius-sm);
+  padding: 0.1em 0.35em;
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+}
+
+.view-content .code-block {
+  position: relative;
+  margin: 0 0 16px;
+  border-radius: 0;
+  border: 1px solid var(--line);
+  background: var(--bg-panel-alt);
+}
+
+.view-content .code-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 4px 10px;
+  min-height: 26px;
+}
+
+.view-content .code-lang {
+  font-size: 11px;
+  color: var(--fg-faint);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.view-content .code-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.view-content .code-copy-btn:hover {
+  color: var(--fg);
+  background: var(--bg-hover);
+}
+
+.view-content .code-copy-btn.copied {
+  color: var(--success);
+}
+
+.view-content pre {
+  margin: 0;
+  padding: 8px 16px 12px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  line-height: 1.6;
+}
+
+.view-content .code-block--wrap pre {
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.view-content mark {
+  background: rgba(255, 208, 0, 0.4);
+  color: var(--fg);
+  border-radius: var(--radius-sm);
+  padding: 0 2px;
+}
+
+.view-content a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.view-content a:hover {
+  text-decoration: underline;
+}
+
+.view-content a.internal-link.is-unresolved {
+  color: var(--fg-faint);
+  text-decoration: underline dashed;
+}
+
+.view-content img {
+  max-width: 100%;
+  border-radius: var(--radius-sm);
+}
+
+/* Syntax highlight token mapping (Pastel Lembut - One Dark / VS Code Pro) */
+.view-content .hljs-comment,
+.view-content .hljs-quote {
+  color: #5c6370;
+  font-style: italic;
+}
+
+/* Tag HTML/XML: Kurung siku (< >) & Tag name (html, head, meta, body, div, script) -> Soft Rose Coral */
+.view-content .hljs-tag {
+  color: #abb2bf;
+}
+.view-content .hljs-name,
+.view-content .hljs-tag .hljs-name,
+.view-content .hljs-selector-tag {
+  color: #e06c75;
+}
+
+/* Atribut HTML/XML & Properti (lang, data-theme, charset, id, src, color) -> Soft Terracotta / Peach */
+.view-content .hljs-attr,
+.view-content .hljs-attribute,
+.view-content .hljs-property {
+  color: #d19a66;
+}
+
+/* Keywords (const, function, let, var, import, if, etc) -> Soft Lavender Violet */
+.view-content .hljs-keyword {
+  color: #c678dd;
+}
+
+/* Strings ("Snippet Tes Warna", "1.0.0", "UTF-8") -> Soft Sage Green */
+.view-content .hljs-string,
+.view-content .hljs-doctag,
+.view-content .hljs-regexp {
+  color: #98c379;
+}
+
+/* Numbers & Booleans (1.0, 100, true, false, null) -> Warm Vanilla Gold */
+.view-content .hljs-number,
+.view-content .hljs-literal {
+  color: #e5c07b;
+}
+
+/* Functions & Identifiers (temaObsidian, log) -> Soft Sky Blue */
+.view-content .hljs-title.function_,
+.view-content .hljs-function,
+.view-content .hljs-title {
+  color: #61afef;
+}
+
+/* Types & Params -> Soft Mint / Cyan */
+.view-content .hljs-type,
+.view-content .hljs-title.class_,
+.view-content .hljs-class .hljs-title,
+.view-content .hljs-params {
+  color: #56b6c2;
+}
+
+/* Variabel & CSS Selector (.class, #id) -> Soft Coral */
+.view-content .hljs-variable,
+.view-content .hljs-selector-class,
+.view-content .hljs-selector-id {
+  color: #e06c75;
+}
+
+/* Meta (<!doctype html>, preprocessors) -> Soft Violet */
+.view-content .hljs-meta,
+.view-content .hljs-meta .hljs-keyword {
+  color: #c678dd;
+}
+
+/* Punctuation & Operators ({}, ;, :, +, =) -> Muted Slate Gray */
+.view-content .hljs-punctuation,
+.view-content .hljs-operator {
+  color: #abb2bf;
+}
+
+/* Bash, Shell CLI & Terminal Token Styling (GitHub Dark / One Dark modern) */
+.view-content .hljs-built_in,
+.view-content .hljs-builtin-name {
+  color: #61afef; /* Perintah bawaan shell: cd, echo, mkdir, cat, git, npm -> Sky Blue */
+  font-weight: 500;
+}
+
+.view-content .hljs-symbol,
+.view-content .hljs-bullet {
+  color: #88c0d0; /* Nord Cyan untuk prompt tanda panah / symbol */
+}
+
+.view-content .hljs-variable.language_,
+.view-content .hljs-subst {
+  color: #e06c75; /* Argumen variabel $VAR, ${VAR} -> Coral */
+}
+
+/* Flag & opsi CLI (--flag, -f, options) */
+.view-content code.language-bash,
+.view-content code.language-sh,
+.view-content code.language-shell,
+.view-content code.language-zsh {
+  color: #abb2bf;
+}
+
+/* Color Preview Swatch (Elemen pemicu) */
+.color-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  margin-right: 4px;
+  margin-left: 2px;
+  vertical-align: -1px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.color-swatch:hover {
+  transform: scale(1.25);
+  border-color: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* Image Embeds & Markdown Images */
+.view-content .note-image {
+  max-width: 100%;
+  border-radius: 6px;
+  margin: 12px 0;
+  display: block;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: opacity 0.2s ease;
+}
+
+/* ── Live SVG / HTML Previewer ── */
+
+/* Override header untuk blok previewable agar toggle rata kiri, aksi rata kanan */
+.view-content .code-block--previewable .code-header {
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* Segmented toggle pill */
+.view-content .code-preview-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-app);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.view-content .code-preview-btn {
+  padding: 0 9px;
+  height: 22px;
+  font-size: 11px;
+  font-family: var(--font-ui);
+  color: var(--fg-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  line-height: 1;
+}
+
+.view-content .code-preview-btn + .code-preview-btn {
+  border-left: 1px solid var(--line);
+}
+
+.view-content .code-preview-btn.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Grup tombol aksi di kanan header */
+.view-content .code-actions {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin-left: auto;
+}
+
+.view-content .code-checker-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.view-content .code-checker-btn:hover {
+  color: var(--fg);
+  background: var(--bg-hover);
+}
+
+.view-content .code-checker-btn.active {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* Pane kode (menggantikan pre biasa) */
+.view-content .code-pane {
+  margin: 0;
+  padding: 10px 14px 12px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  line-height: 1.6;
+}
+
+/* Pane pratinjau */
+.view-content .preview-pane {
+  padding: 12px;
+}
+
+.view-content .preview-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-app);
+  padding: 16px;
+  overflow: auto;
+}
+
+/* Checkerboard untuk cek SVG transparan */
+.view-content .preview-inner--checker {
+  background-image:
+    linear-gradient(45deg, #666 25%, transparent 25%),
+    linear-gradient(-45deg, #666 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #666 75%),
+    linear-gradient(-45deg, transparent 75%, #666 75%);
+  background-size: 14px 14px;
+  background-position: 0 0, 0 7px, 7px -7px, -7px 0;
+  background-color: #999;
+}

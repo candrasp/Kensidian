@@ -1,0 +1,42 @@
+[package]
+name = "kensidian"
+version = "0.1.0"
+description = "A Tauri App"
+authors = ["you"]
+edition = "2021"
+
+[lib]
+name = "kensidian_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[dependencies]
+tauri = { version = "=2.12.5", features = ["protocol-asset"] }
+tauri-plugin-opener = "=2.7.3"
+tauri-plugin-dialog = "=2.8.4"
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.154"
+thiserror = "=2.0.21"
+tokio = { version = "=1.54.1", default-features = false, features = ["rt", "fs", "io-util", "sync", "time"] }
+tokio-util = { version = "=0.7.20", features = ["io"] }
+notify = "=8.2.2"
+notify-debouncer-full = "=0.7.0"
+rusqlite = { version = "=0.42.0", features = ["bundled"] }
+trash = "=5.3.0"
+unicode-normalization = "=0.1.26"
+walkdir = "=2.5.0"
+sha2 = "=0.11.1"
+keyring = "=4.2.0"
+reqwest = { version = "=0.13.5", default-features = false, features = ["native-tls", "stream", "system-proxy"] }
+rusty-s3 = { version = "=0.11.0", default-features = false, features = ["rustcrypto"] }
+url = "=2.5.8"
+
+[build-dependencies]
+tauri-build = { version = "=2.7.4", features = [] }
+
+[dev-dependencies]
+tempfile = "=3.27.0"
+
+[profile.release]
+opt-level = "s"
+lto = "thin"
+strip = true
