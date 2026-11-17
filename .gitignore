@@ -61,3 +61,10 @@ Desktop.ini
 ~/.tauri/*.key.pub
 **/.tauri/*.key
 **/.tauri/*.key.pub
+
+# Catatan internal / dokumen kerja
+ROADMAP.md
+ROADMAP-BARU.md
+BUG.md
+DECISIONS.md
+KONSEP-BARU.md

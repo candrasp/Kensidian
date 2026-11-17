@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import {
   X,
   HelpCircle,
@@ -8,7 +8,9 @@ import {
   ExternalLink,
   RefreshCw,
   Download,
+  Check,
 } from 'lucide-vue-next'
+import { getVersion } from '@tauri-apps/api/app'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { t } from '@/lib/i18n/id'
 import { APP_NAME, APP_VERSION, APP_GITHUB_URL } from '@/lib/constants'
@@ -20,8 +22,26 @@ defineEmits<{
 }>()
 
 const activeTab = ref<'about' | 'shortcuts' | 'markdown'>('about')
-const updater = useUpdater()
+const currentVersion = ref(APP_VERSION)
+const updateStatus = ref<'idle' | 'up-to-date' | 'error'>('idle')
+const {
+  isChecking,
+  isDownloading,
+  downloadProgress,
+  availableVersion,
+  releaseDate,
+  checkForUpdate,
+  downloadAndInstall,
+} = useUpdater()
 const toastStore = useToastStore()
+
+onMounted(async () => {
+  try {
+    currentVersion.value = await getVersion()
+  } catch {
+    // Fallback ke APP_VERSION jika gagal mengambil versi runtime
+  }
+})
 
 const shortcuts = [
   { key: 'Ctrl + N', desc: 'Catatan baru di folder aktif' },
@@ -49,24 +69,44 @@ const mdTips = [
 ]
 
 async function handleCheckUpdate() {
-  if (updater.isChecking.value || updater.isDownloading.value) return
+  if (isChecking.value || isDownloading.value) return
+  updateStatus.value = 'idle'
 
-  const update = await updater.checkForUpdate()
-  if (!update) {
-    toastStore.success(t.upToDate)
+  try {
+    const update = await checkForUpdate()
+    if (!update) {
+      updateStatus.value = 'up-to-date'
+      toastStore.success(t.upToDate)
+    }
+  } catch {
+    updateStatus.value = 'error'
+    toastStore.error(t.updateError)
   }
 }
 
 async function handleDownloadUpdate() {
   try {
-    await updater.downloadAndInstall()
-  } catch (error) {
+    await downloadAndInstall()
+  } catch {
+    updateStatus.value = 'error'
     toastStore.error(t.updateError)
   }
 }
 
 async function openGithub() {
   await openUrl(APP_GITHUB_URL)
+}
+
+function formatDate(dateStr: string): string {
+  try {
+    return new Intl.DateTimeFormat('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }).format(new Date(dateStr))
+  } catch {
+    return dateStr
+  }
 }
 </script>
 
@@ -136,7 +176,7 @@ async function openGithub() {
             <img src="/logo.png" alt="Logo" class="h-14 w-14 rounded-lg drop-shadow-sm" />
             <div>
               <h3 class="text-sm font-bold text-fg">{{ APP_NAME }}</h3>
-              <p class="text-fg-muted text-[11px] mt-0.5">Version {{ APP_VERSION }}</p>
+              <p class="text-fg-muted text-[11px] mt-0.5">Version {{ currentVersion }}</p>
             </div>
 
             <p class="text-xs text-fg-muted text-center max-w-sm mt-4 leading-relaxed">
@@ -148,39 +188,53 @@ async function openGithub() {
             </div>
 
             <!-- Minimalist Update & Github Actions -->
-            <div class="flex items-center gap-2 pt-1 text-xs">
-              <button
-                v-if="!updater.availableVersion"
-                type="button"
-                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-line bg-panel-alt hover:bg-hover text-fg transition-colors cursor-pointer outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="updater.isChecking"
-                @click="handleCheckUpdate"
-              >
-                <RefreshCw :class="['h-3 w-3', updater.isChecking ? 'animate-spin text-accent' : 'text-fg-muted']" />
-                <span>{{ updater.isChecking ? t.checkingUpdate : t.checkUpdate }}</span>
-              </button>
+            <div class="flex flex-col items-center gap-1.5 pt-1 text-xs">
+              <div class="flex items-center gap-2">
+                <button
+                  v-if="!availableVersion"
+                  type="button"
+                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-line bg-panel-alt hover:bg-hover text-fg transition-colors cursor-pointer outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  :disabled="isChecking"
+                  @click="handleCheckUpdate"
+                >
+                  <RefreshCw :class="['h-3 w-3', isChecking ? 'animate-spin text-accent' : 'text-fg-muted']" />
+                  <span>{{ isChecking ? t.checkingUpdate : t.checkUpdate }}</span>
+                </button>
 
-              <button
-                v-else
-                type="button"
-                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-accent bg-accent/10 hover:bg-accent/20 text-accent transition-colors cursor-pointer outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="updater.isDownloading"
-                @click="handleDownloadUpdate"
-              >
-                <Download v-if="!updater.isDownloading" class="h-3 w-3" />
-                <RefreshCw v-else class="h-3 w-3 animate-spin" />
-                <span v-if="!updater.isDownloading">{{ t.updateVersion(updater.availableVersion!) }}</span>
-                <span v-else>{{ t.downloading }} {{ updater.downloadProgress }}%</span>
-              </button>
+                <button
+                  v-else
+                  type="button"
+                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-accent bg-accent/10 hover:bg-accent/20 text-accent transition-colors cursor-pointer outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  :disabled="isDownloading"
+                  @click="handleDownloadUpdate"
+                >
+                  <Download v-if="!isDownloading" class="h-3 w-3" />
+                  <RefreshCw v-else class="h-3 w-3 animate-spin" />
+                  <span v-if="!isDownloading">{{ t.updateVersion(availableVersion) }}</span>
+                  <span v-else>{{ t.downloading }} {{ downloadProgress }}%</span>
+                </button>
 
-              <button
-                type="button"
-                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-line bg-panel-alt hover:bg-hover text-fg-muted hover:text-fg transition-colors cursor-pointer outline-none"
-                @click="openGithub"
-              >
-                <ExternalLink class="h-3 w-3" />
-                <span>GitHub</span>
-              </button>
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-line bg-panel-alt hover:bg-hover text-fg-muted hover:text-fg transition-colors cursor-pointer outline-none"
+                  @click="openGithub"
+                >
+                  <ExternalLink class="h-3 w-3" />
+                  <span>GitHub</span>
+                </button>
+              </div>
+
+              <!-- Inline Feedback Status -->
+              <p v-if="availableVersion && releaseDate" class="text-[11px] text-fg-muted animate-in fade-in duration-150">
+                {{ t.releasedOn(formatDate(releaseDate)) }}
+              </p>
+              <p v-else-if="updateStatus === 'up-to-date'" class="text-[11px] text-success inline-flex items-center gap-1 animate-in fade-in duration-150">
+                <Check class="h-3 w-3" />
+                <span>{{ t.upToDate }}</span>
+              </p>
+              <p v-else-if="updateStatus === 'error'" class="text-[11px] text-danger animate-in fade-in duration-150">
+                {{ t.updateError }}
+              </p>
             </div>
           </div>
 

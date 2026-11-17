@@ -7,25 +7,27 @@ export function useUpdater() {
   const isDownloading = ref(false)
   const downloadProgress = ref(0)
   const availableVersion = ref<string | null>(null)
+  const releaseDate = ref<string | null>(null)
   const releaseNotes = ref<string | null>(null)
 
   async function checkForUpdate() {
     isChecking.value = true
     availableVersion.value = null
+    releaseDate.value = null
     releaseNotes.value = null
 
     try {
       const update = await check()
       if (update) {
         availableVersion.value = update.version
+        releaseDate.value = update.date ?? null
         releaseNotes.value = update.body ?? null
         return update
       }
       return null
     } catch (error) {
       console.error('Gagal mengecek update:', error)
-      // Silent fail - normal jika belum ada release di GitHub
-      return null
+      throw error
     } finally {
       isChecking.value = false
     }
@@ -75,6 +77,7 @@ export function useUpdater() {
     isDownloading,
     downloadProgress,
     availableVersion,
+    releaseDate,
     releaseNotes,
     checkForUpdate,
     downloadAndInstall,

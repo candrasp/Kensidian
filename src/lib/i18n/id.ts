@@ -114,6 +114,7 @@ export const t = {
   upToDate: 'Kensidian sudah menggunakan versi terbaru',
   updateAvailable: 'Pembaruan Tersedia',
   updateVersion: (ver: string) => `Versi ${ver} tersedia`,
+  releasedOn: (date: string) => `Dirilis pada ${date}`,
   downloadUpdate: 'Unduh & Instal',
   downloading: 'Mengunduh...',
   installUpdate: 'Memasang pembaruan...',
