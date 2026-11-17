@@ -2,6 +2,10 @@
 
 Semua perubahan penting pada aplikasi Kensidian akan dicatat di file ini.
 
+## [1.1.7] - 2026-11-18
+### Diperbaiki
+- Perbaikan ekstraksi otomatis catatan perubahan pada GitHub Actions (ganti `awk` bash dengan PowerShell untuk kompatibilitas runner Windows).
+
 ## [1.1.6] - 2026-11-17
 ### Ditambahkan
 - Integrasi otomatis ekstraksi catatan perubahan rilis dari `CHANGELOG.md` ke GitHub Release dan Tauri Updater.
