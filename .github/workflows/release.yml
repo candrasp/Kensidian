@@ -37,20 +37,31 @@ jobs:
         run: bun install
 
       - name: Extract Changelog
-        shell: bash
+        shell: pwsh
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          # Ekstrak bagian changelog untuk versi saat ini
-          awk -v ver="$VERSION" '
-            $0 ~ "^## \\[" ver "\\]" { flag=1; next }
-            /^## \\[/ && flag { flag=0; exit }
-            flag { print }
-          ' CHANGELOG.md > RELEASE_NOTES.md
+          $version = $env:GITHUB_REF_NAME -replace '^v', ''
+          $lines = Get-Content CHANGELOG.md
+          $capture = $false
+          $result = @()
 
-          # Fallback jika kosong
-          if [ ! -s RELEASE_NOTES.md ]; then
-            echo "Pembaruan Kensidian versi $VERSION" > RELEASE_NOTES.md
-          fi
+          foreach ($line in $lines) {
+            if ($line -match "^## \[$([regex]::Escape($version))\]") {
+              $capture = $true
+              continue
+            }
+            if ($capture -and $line -match '^## \[') {
+              break
+            }
+            if ($capture) {
+              $result += $line
+            }
+          }
+
+          if ($result.Count -eq 0) {
+            $result = @("Pembaruan Kensidian versi $version")
+          }
+
+          $result | Set-Content RELEASE_NOTES.md -Encoding UTF8
 
       - name: Build & Release Tauri App
         uses: tauri-apps/tauri-action@v0
