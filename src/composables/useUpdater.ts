@@ -24,6 +24,7 @@ export function useUpdater() {
       return null
     } catch (error) {
       console.error('Gagal mengecek update:', error)
+      // Silent fail - normal jika belum ada release di GitHub
       return null
     } finally {
       isChecking.value = false
@@ -31,15 +32,18 @@ export function useUpdater() {
   }
 
   async function downloadAndInstall() {
-    const update = await check()
-    if (!update) return
-
     isDownloading.value = true
     downloadProgress.value = 0
-    let downloaded = 0
-    let contentLength = 0
 
     try {
+      const update = await check()
+      if (!update) {
+        throw new Error('Tidak ada update tersedia')
+      }
+
+      let downloaded = 0
+      let contentLength = 0
+
       await update.downloadAndInstall((event) => {
         switch (event.event) {
           case 'Started':
@@ -60,9 +64,9 @@ export function useUpdater() {
       await relaunch()
     } catch (error) {
       console.error('Gagal mengunduh/memasang update:', error)
-      throw error
-    } finally {
       isDownloading.value = false
+      downloadProgress.value = 0
+      throw error
     }
   }
 
