@@ -26,6 +26,14 @@ const deleteModalOpen = ref(false)
 const pathsToDelete = ref<string[]>([])
 const itemClass = 'rounded-sm px-2 py-1.5 hover:bg-hover cursor-pointer outline-none select-none flex items-center'
 
+const hoverTooltip = ref<{ visible: boolean; text: string; x: number; y: number }>({
+  visible: false,
+  text: '',
+  x: 0,
+  y: 0,
+})
+let hoverTimer: ReturnType<typeof setTimeout> | null = null
+
 const { selectedPaths, dragBox, isSelected, clearSelection, selectAll, handleItemClick, startDrag } = useTreeSelection()
 const { isDragOverRoot, onRootDragOver, onRootDragLeave, onRootDrop } = useTreeDrop()
 const { isDraggingItem, dropTargetPath, isValidDrop, dragPos, sourceLabel, targetLabel, startItemDrag } = useItemDrag()
@@ -124,9 +132,30 @@ watch(() => vaultStore.requestCreate, (req) => {
 })
 
 function handleItemMousedown(path: string, e: MouseEvent) {
+  hideTooltip()
   if (e.ctrlKey || e.metaKey || e.shiftKey) return
   const paths = selectedPaths.value.has(path) ? Array.from(selectedPaths.value) : [path]
   startItemDrag(e, paths)
+}
+
+function handleItemMouseEnter(name: string, e: MouseEvent) {
+  if (isDraggingItem.value) return
+  if (hoverTimer) clearTimeout(hoverTimer)
+  const clientX = e.clientX
+  const clientY = e.clientY
+  hoverTimer = setTimeout(() => {
+    hoverTooltip.value = {
+      visible: true,
+      text: name,
+      x: clientX + 14,
+      y: clientY + 10,
+    }
+  }, 400)
+}
+
+function hideTooltip() {
+  if (hoverTimer) clearTimeout(hoverTimer)
+  hoverTooltip.value.visible = false
 }
 
 function handleKeydown(e: KeyboardEvent) {
@@ -187,6 +216,8 @@ function handleKeydown(e: KeyboardEvent) {
             @new-note="handleNewNote"
             @new-folder="handleNewFolder"
             @mousedown-item="handleItemMousedown"
+            @item-mouseenter="handleItemMouseEnter"
+            @item-mouseleave="hideTooltip"
           />
         </div>
         <div class="flex-1 min-h-8" />
@@ -197,6 +228,17 @@ function handleKeydown(e: KeyboardEvent) {
         />
       </div>
     </ContextMenuTrigger>
+
+    <!-- Cursor Follower Floating Tooltip -->
+    <Teleport to="body">
+      <div
+        v-if="hoverTooltip.visible"
+        class="fixed pointer-events-none z-130 rounded-sm border border-line bg-panel-alt px-2 py-1 text-xs text-fg shadow-menu max-w-xs break-all animate-in fade-in duration-100"
+        :style="{ left: `${hoverTooltip.x}px`, top: `${hoverTooltip.y}px` }"
+      >
+        {{ hoverTooltip.text }}
+      </div>
+    </Teleport>
 
     <ContextMenuPortal>
       <ContextMenuContent class="z-110 min-w-44 rounded-sm border border-line bg-panel-alt p-1 text-xs text-fg shadow-menu">

@@ -2,6 +2,11 @@
 
 Semua perubahan penting pada aplikasi Kensidian akan dicatat di file ini.
 
+## [1.1.5] - 2026-11-17
+### Ditambahkan
+- Tooltip nama lengkap catatan dan folder saat di-hover pada sidebar pohon berkas (file tree).
+- Penempatan posisi tooltip secara dinamis di sebelah kanan kursor mouse dengan tema visual gelap Kensidian.
+
 ## [1.1.4] - 2026-11-17
 ### Ditambahkan
 - Dialog pop-up pembaruan otomatis (`UpdateModal`) saat aplikasi dibuka jika ada rilis baru.

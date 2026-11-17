@@ -9,6 +9,9 @@ import {
 
 defineProps<{
   content?: string
+  side?: 'top' | 'right' | 'bottom' | 'left'
+  align?: 'start' | 'center' | 'end'
+  sideOffset?: number
 }>()
 </script>
 
@@ -21,8 +24,9 @@ defineProps<{
       <TooltipPortal>
         <TooltipContent
           v-if="content"
-          side="bottom"
-          :side-offset="4"
+          :side="side ?? 'bottom'"
+          :align="align ?? 'center'"
+          :side-offset="sideOffset ?? 4"
           class="z-120 rounded-sm border border-line bg-panel-alt px-2 py-1 text-xs text-fg shadow-menu"
         >
           {{ content }}

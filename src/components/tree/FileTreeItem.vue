@@ -38,6 +38,8 @@ const emit = defineEmits<{
   (e: 'new-folder', folder: string): void
   (e: 'edit-icon', path: string): void
   (e: 'mousedown-item', path: string, event: MouseEvent): void
+  (e: 'item-mouseenter', name: string, event: MouseEvent): void
+  (e: 'item-mouseleave'): void
 }>()
 
 const editName = ref('')
@@ -91,6 +93,8 @@ const revealInManager = () => ipc.revealInFileManager(props.entry.path)
         ]"
         @click="handleClick"
         @mousedown.stop="!isRenaming && emit('mousedown-item', entry.path, $event)"
+        @mouseenter="!isRenaming && emit('item-mouseenter', displayName, $event)"
+        @mouseleave="emit('item-mouseleave')"
       >
         <button
           v-if="entry.kind === 'folder'"
