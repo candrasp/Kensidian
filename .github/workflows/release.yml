@@ -36,6 +36,22 @@ jobs:
       - name: Install frontend dependencies
         run: bun install
 
+      - name: Extract Changelog
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          # Ekstrak bagian changelog untuk versi saat ini
+          awk -v ver="$VERSION" '
+            $0 ~ "^## \\[" ver "\\]" { flag=1; next }
+            /^## \\[/ && flag { flag=0; exit }
+            flag { print }
+          ' CHANGELOG.md > RELEASE_NOTES.md
+
+          # Fallback jika kosong
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "Pembaruan Kensidian versi $VERSION" > RELEASE_NOTES.md
+          fi
+
       - name: Build & Release Tauri App
         uses: tauri-apps/tauri-action@v0
         env:
@@ -45,7 +61,7 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: "Kensidian v__VERSION__"
-          releaseBody: "Lihat catatan perubahan di bawah ini untuk detail pembaruan."
+          releaseBodyFile: RELEASE_NOTES.md
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}

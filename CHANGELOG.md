@@ -2,6 +2,11 @@
 
 Semua perubahan penting pada aplikasi Kensidian akan dicatat di file ini.
 
+## [1.1.6] - 2026-11-17
+### Ditambahkan
+- Integrasi otomatis ekstraksi catatan perubahan rilis dari `CHANGELOG.md` ke GitHub Release dan Tauri Updater.
+- Tampilan detail Markdown rilis langsung di dalam modal Pembaruan Aplikasi.
+
 ## [1.1.5] - 2026-11-17
 ### Ditambahkan
 - Tooltip nama lengkap catatan dan folder saat di-hover pada sidebar pohon berkas (file tree).
