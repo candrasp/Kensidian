@@ -1,15 +1,18 @@
+use crate::error::{AppError, IpcError};
+use crate::models::FileEntry;
+use crate::state::AppState;
+use crate::vault::paths::{resolve, validate_rel};
 use std::fs;
 use std::path::PathBuf;
 use std::time::UNIX_EPOCH;
 use tauri::{AppHandle, State};
 use tauri_plugin_opener::OpenerExt;
-use crate::error::{AppError, IpcError};
-use crate::models::FileEntry;
-use crate::state::AppState;
-use crate::vault::paths::{resolve, validate_rel};
 
 #[tauri::command]
-pub async fn fs_list_dir(state: State<'_, AppState>, path: String) -> Result<Vec<FileEntry>, IpcError> {
+pub async fn fs_list_dir(
+    state: State<'_, AppState>,
+    path: String,
+) -> Result<Vec<FileEntry>, IpcError> {
     let session = state.get_session()?;
     let target_dir = resolve(&session, &path)?;
 
@@ -55,7 +58,11 @@ pub async fn fs_list_dir(state: State<'_, AppState>, path: String) -> Result<Vec
         entries.push(FileEntry {
             path: rel_path,
             name: file_name,
-            kind: if is_dir { "folder".into() } else { "file".into() },
+            kind: if is_dir {
+                "folder".into()
+            } else {
+                "file".into()
+            },
             mtime,
             size: if is_dir { 0 } else { metadata.len() },
         });
@@ -67,9 +74,10 @@ pub async fn fs_list_dir(state: State<'_, AppState>, path: String) -> Result<Vec
 #[tauri::command]
 pub async fn fs_create_folder(state: State<'_, AppState>, path: String) -> Result<(), IpcError> {
     let session = state.get_session()?;
-    let _lock = session.write_lock.lock().map_err(|_| {
-        AppError::Io("failed to acquire write lock".into())
-    })?;
+    let _lock = session
+        .write_lock
+        .lock()
+        .map_err(|_| AppError::Io("failed to acquire write lock".into()))?;
 
     let valid_rel = validate_rel(&path)?;
     if valid_rel.is_empty() {
@@ -86,11 +94,16 @@ pub async fn fs_create_folder(state: State<'_, AppState>, path: String) -> Resul
 }
 
 #[tauri::command]
-pub async fn fs_rename(state: State<'_, AppState>, from: String, to: String) -> Result<(), IpcError> {
+pub async fn fs_rename(
+    state: State<'_, AppState>,
+    from: String,
+    to: String,
+) -> Result<(), IpcError> {
     let session = state.get_session()?;
-    let _lock = session.write_lock.lock().map_err(|_| {
-        AppError::Io("failed to acquire write lock".into())
-    })?;
+    let _lock = session
+        .write_lock
+        .lock()
+        .map_err(|_| AppError::Io("failed to acquire write lock".into()))?;
 
     let target_from = resolve(&session, &from)?;
     let target_to = resolve(&session, &to)?;
@@ -113,11 +126,16 @@ pub async fn fs_rename(state: State<'_, AppState>, from: String, to: String) -> 
 }
 
 #[tauri::command]
-pub async fn fs_delete(state: State<'_, AppState>, path: String, to_trash: Option<bool>) -> Result<(), IpcError> {
+pub async fn fs_delete(
+    state: State<'_, AppState>,
+    path: String,
+    to_trash: Option<bool>,
+) -> Result<(), IpcError> {
     let session = state.get_session()?;
-    let _lock = session.write_lock.lock().map_err(|_| {
-        AppError::Io("failed to acquire write lock".into())
-    })?;
+    let _lock = session
+        .write_lock
+        .lock()
+        .map_err(|_| AppError::Io("failed to acquire write lock".into()))?;
 
     let target = resolve(&session, &path)?;
     if !target.exists() {
@@ -136,16 +154,20 @@ pub async fn fs_delete(state: State<'_, AppState>, path: String, to_trash: Optio
 }
 
 #[tauri::command]
-pub async fn reveal_in_file_manager(app: AppHandle, state: State<'_, AppState>, path: String) -> Result<(), IpcError> {
+pub async fn reveal_in_file_manager(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    path: String,
+) -> Result<(), IpcError> {
     let session = state.get_session()?;
     let target = resolve(&session, &path)?;
     if !target.exists() {
         return Err(AppError::NotFound("path not found".into()).into());
     }
 
-    app.opener().reveal_item_in_dir(&target).map_err(|e| {
-        AppError::Io(e.to_string())
-    })?;
+    app.opener()
+        .reveal_item_in_dir(&target)
+        .map_err(|e| AppError::Io(e.to_string()))?;
     Ok(())
 }
 
@@ -203,16 +225,18 @@ pub async fn fs_import_external(
     vault_dir: String,
 ) -> Result<String, IpcError> {
     let session = state.get_session()?;
-    let _lock = session.write_lock.lock().map_err(|_| {
-        AppError::Io("failed to acquire write lock".into())
-    })?;
+    let _lock = session
+        .write_lock
+        .lock()
+        .map_err(|_| AppError::Io("failed to acquire write lock".into()))?;
 
     let src = PathBuf::from(&src_path);
     if !src.exists() || !src.is_file() {
         return Err(AppError::NotFound("source file not found".into()).into());
     }
 
-    let raw_name = src.file_name()
+    let raw_name = src
+        .file_name()
         .and_then(|n| n.to_str())
         .unwrap_or("Catatan baru")
         .to_string();
@@ -221,12 +245,17 @@ pub async fn fs_import_external(
     let lower = raw_name.to_lowercase();
     let is_allowed = allowed.iter().any(|ext| lower.ends_with(ext));
     if !is_allowed {
-        return Err(AppError::InvalidName("only .md, .markdown, .txt files are supported".into()).into());
+        return Err(
+            AppError::InvalidName("only .md, .markdown, .txt files are supported".into()).into(),
+        );
     }
 
     let base = {
         let p = std::path::Path::new(&raw_name);
-        let stem = p.file_stem().and_then(|s| s.to_str()).unwrap_or("Catatan baru");
+        let stem = p
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("Catatan baru");
         // strip double extensions like "note.md" stem = "note"
         stem.trim().to_string()
     };
@@ -271,16 +300,18 @@ pub async fn fs_write_asset(
     vault_dir: String,
 ) -> Result<String, IpcError> {
     let session = state.get_session()?;
-    let _lock = session.write_lock.lock().map_err(|_| {
-        AppError::Io("failed to acquire write lock".into())
-    })?;
+    let _lock = session
+        .write_lock
+        .lock()
+        .map_err(|_| AppError::Io("failed to acquire write lock".into()))?;
 
     let src = PathBuf::from(&src_path);
     if !src.exists() || !src.is_file() {
         return Err(AppError::NotFound("source file not found".into()).into());
     }
 
-    let raw_name = src.file_name()
+    let raw_name = src
+        .file_name()
         .and_then(|n| n.to_str())
         .unwrap_or("Catatan baru")
         .to_string();
@@ -289,12 +320,17 @@ pub async fn fs_write_asset(
     let lower = raw_name.to_lowercase();
     let is_allowed = allowed.iter().any(|ext| lower.ends_with(ext));
     if !is_allowed {
-        return Err(AppError::InvalidName("only .md, .markdown, .txt files are supported".into()).into());
+        return Err(
+            AppError::InvalidName("only .md, .markdown, .txt files are supported".into()).into(),
+        );
     }
 
     let base = {
         let p = std::path::Path::new(&raw_name);
-        let stem = p.file_stem().and_then(|s| s.to_str()).unwrap_or("Catatan baru");
+        let stem = p
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("Catatan baru");
         // strip double extensions like "note.md" stem = "note"
         stem.trim().to_string()
     };

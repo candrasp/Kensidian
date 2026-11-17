@@ -58,6 +58,7 @@ export type IpcErrorCode =
   | 'DENIED'
   | 'TOO_LARGE'
   | 'INVALID_NAME'
+  | 'INVALID_INPUT'
   | 'IO'
   | 'SYNC_NOT_CONFIGURED'
   | 'SYNC_AUTH'

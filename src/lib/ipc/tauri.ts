@@ -40,8 +40,8 @@ export const tauriIpc = {
   saveAsset: (srcPath: string) => invoke<string>('fs_save_asset', { srcPath }),
   writeAsset: (fileName: string, data: number[] | Uint8Array) =>
     invoke<string>('fs_write_asset', { fileName, data: Array.from(data) }),
-  searchQuery: (query: string, caseSensitive: boolean, limit = 100) =>
-    invoke<SearchHit[]>('search_query', { query, caseSensitive, limit }),
+  searchInVault: (query: string, useRegex: boolean, caseSensitive: boolean) =>
+    invoke<SearchHit[]>('search_in_vault', { query, useRegex, caseSensitive }),
   backlinksGet: (path: string) => invoke<BacklinkRef[]>('backlinks_get', { path }),
   backlinksCount: (path: string) => invoke<number>('backlinks_count', { path }),
   syncConfigLoad: () => invoke<SyncConfig>('sync_config_load'),

@@ -1,13 +1,13 @@
-use std::fs;
-use std::time::UNIX_EPOCH;
-use tauri::State;
-use walkdir::WalkDir;
 use crate::constants::MAX_NOTE_BYTES;
 use crate::error::{AppError, IpcError};
 use crate::models::{NoteContent, NoteRef};
 use crate::state::AppState;
 use crate::storage::atomic::atomic_write;
 use crate::vault::paths::{resolve, validate_rel};
+use std::fs;
+use std::time::UNIX_EPOCH;
+use tauri::State;
+use walkdir::WalkDir;
 
 fn get_file_mtime(metadata: &fs::Metadata) -> i64 {
     metadata
@@ -50,9 +50,10 @@ pub async fn note_write(
     expected_mtime: i64,
 ) -> Result<serde_json::Value, IpcError> {
     let session = state.get_session()?;
-    let _lock = session.write_lock.lock().map_err(|_| {
-        AppError::Io("failed to acquire write lock".into())
-    })?;
+    let _lock = session
+        .write_lock
+        .lock()
+        .map_err(|_| AppError::Io("failed to acquire write lock".into()))?;
 
     let target = resolve(&session, &path)?;
     if !target.exists() {
@@ -80,9 +81,10 @@ pub async fn note_create(
     content: Option<String>,
 ) -> Result<serde_json::Value, IpcError> {
     let session = state.get_session()?;
-    let _lock = session.write_lock.lock().map_err(|_| {
-        AppError::Io("failed to acquire write lock".into())
-    })?;
+    let _lock = session
+        .write_lock
+        .lock()
+        .map_err(|_| AppError::Io("failed to acquire write lock".into()))?;
 
     let valid_rel = validate_rel(&path)?;
     if !valid_rel.ends_with(".md") {
@@ -109,17 +111,25 @@ pub async fn vault_list_notes(state: State<'_, AppState>) -> Result<Vec<NoteRef>
     let canonical_root = session.canonical_root.clone();
 
     let mut notes = Vec::new();
-    for entry in WalkDir::new(&canonical_root).into_iter().filter_entry(|e| {
-        let name = e.file_name().to_string_lossy();
-        !name.starts_with('.')
-    }).flatten() {
+    for entry in WalkDir::new(&canonical_root)
+        .into_iter()
+        .filter_entry(|e| {
+            let name = e.file_name().to_string_lossy();
+            !name.starts_with('.')
+        })
+        .flatten()
+    {
         if entry.file_type().is_file() {
             let path = entry.path();
             if let Some(ext) = path.extension() {
                 if ext.eq_ignore_ascii_case("md") {
                     if let Ok(rel) = path.strip_prefix(&canonical_root) {
                         let rel_str = rel.to_string_lossy().replace('\\', "/");
-                        let file_stem = path.file_stem().unwrap_or_default().to_string_lossy().to_string();
+                        let file_stem = path
+                            .file_stem()
+                            .unwrap_or_default()
+                            .to_string_lossy()
+                            .to_string();
                         let mtime = entry.metadata().map(|m| get_file_mtime(&m)).unwrap_or(0);
                         notes.push(NoteRef {
                             path: rel_str,

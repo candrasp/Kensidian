@@ -12,6 +12,7 @@ import {
   BookOpen,
   Pencil,
   RotateCw,
+  HelpCircle,
 } from 'lucide-vue-next'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { APP_NAME } from '@/lib/constants'
@@ -102,6 +103,7 @@ onUnmounted(() => {
       <IconButton v-if="tabsStore.activePath" :icon="ArrowLeft" :label="`${t.back} (Alt+←)`" :disabled="!tabsStore.canGoBack" @click="tabsStore.back" />
       <IconButton v-if="tabsStore.activePath" :icon="ArrowRight" :label="`${t.forward} (Alt+→)`" :disabled="!tabsStore.canGoForward" @click="tabsStore.forward" />
       <IconButton v-if="tabsStore.activePath" :icon="RotateCw" :label="t.refreshNote" @click="tabsStore.reloadCurrentNote()" />
+      <IconButton :icon="HelpCircle" :label="t.helpAndAbout" @click="uiStore.modal = 'help'" />
     </div>
 
     <div data-tauri-drag-region class="flex-1 truncate text-center text-xs font-medium text-fg px-2 cursor-default flex items-center justify-center gap-1.5">

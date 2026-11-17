@@ -162,18 +162,44 @@ export const mockIpc = {
     await delay()
     return fileName
   },
-  searchQuery: async (query: string): Promise<SearchHit[]> => {
+  searchInVault: async (query: string, useRegex: boolean, caseSensitive: boolean): Promise<SearchHit[]> => {
     await delay()
     const hits: SearchHit[] = []
+    const searchQuery = caseSensitive ? query : query.toLowerCase()
+
     for (const [p, text] of mockFiles.entries()) {
-      if (text.toLowerCase().includes(query.toLowerCase())) {
-        hits.push({
-          path: p,
-          name: p.split('/').pop() || p,
-          line: 1,
-          snippet: text.slice(0, 80),
-          ranges: [[0, query.length]],
-        })
+      const lines = text.split('\n')
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i]
+        const searchLine = caseSensitive ? line : line.toLowerCase()
+
+        if (useRegex) {
+          try {
+            const re = new RegExp(query, caseSensitive ? '' : 'i')
+            const match = re.exec(searchLine)
+            if (match) {
+              hits.push({
+                path: p,
+                name: p.split('/').pop() || p,
+                line: i + 1,
+                snippet: line.slice(0, 100),
+                ranges: [[match.index, match.index + match[0].length]],
+              })
+            }
+          } catch {
+            // Invalid regex, skip
+          }
+        } else if (searchLine.includes(searchQuery)) {
+          const idx = searchLine.indexOf(searchQuery)
+          hits.push({
+            path: p,
+            name: p.split('/').pop() || p,
+            line: i + 1,
+            snippet: line.slice(0, 100),
+            ranges: [[idx, idx + query.length]],
+          })
+        }
       }
     }
     return hits

@@ -1,14 +1,14 @@
+use crate::error::AppError;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;
 use std::thread;
 use std::time::Duration;
-use crate::error::AppError;
 
 pub fn atomic_write(target_path: &Path, content: &[u8]) -> Result<(), AppError> {
-    let parent = target_path.parent().ok_or_else(|| {
-        AppError::Io("target path has no parent directory".into())
-    })?;
+    let parent = target_path
+        .parent()
+        .ok_or_else(|| AppError::Io("target path has no parent directory".into()))?;
 
     if !parent.exists() {
         fs::create_dir_all(parent)?;
@@ -33,7 +33,11 @@ pub fn atomic_write(target_path: &Path, content: &[u8]) -> Result<(), AppError> 
         file.sync_data()?;
     }
 
-    let backoffs = [Duration::from_millis(20), Duration::from_millis(50), Duration::from_millis(100)];
+    let backoffs = [
+        Duration::from_millis(20),
+        Duration::from_millis(50),
+        Duration::from_millis(100),
+    ];
     let mut last_err = None;
 
     for (i, delay) in backoffs.iter().enumerate() {

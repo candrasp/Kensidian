@@ -1,12 +1,14 @@
-use std::fs;
-use tauri::State;
 use crate::error::{AppError, IpcError};
 use crate::models::{ItemStyle, VaultConfig};
 use crate::state::AppState;
 use crate::storage::atomic::atomic_write;
+use std::fs;
+use tauri::State;
 
 #[tauri::command]
-pub async fn settings_load(state: State<'_, AppState>) -> Result<Option<serde_json::Value>, IpcError> {
+pub async fn settings_load(
+    state: State<'_, AppState>,
+) -> Result<Option<serde_json::Value>, IpcError> {
     let settings_path = state.dirs.settings_file();
     if !settings_path.exists() {
         return Ok(None);
@@ -17,7 +19,10 @@ pub async fn settings_load(state: State<'_, AppState>) -> Result<Option<serde_js
 }
 
 #[tauri::command]
-pub async fn settings_save(state: State<'_, AppState>, settings: serde_json::Value) -> Result<(), IpcError> {
+pub async fn settings_save(
+    state: State<'_, AppState>,
+    settings: serde_json::Value,
+) -> Result<(), IpcError> {
     let settings_path = state.dirs.settings_file();
     let json = serde_json::to_string_pretty(&settings).map_err(AppError::from)?;
     atomic_write(&settings_path, json.as_bytes())?;
@@ -25,7 +30,9 @@ pub async fn settings_save(state: State<'_, AppState>, settings: serde_json::Val
 }
 
 #[tauri::command]
-pub async fn workspace_load(state: State<'_, AppState>) -> Result<Option<serde_json::Value>, IpcError> {
+pub async fn workspace_load(
+    state: State<'_, AppState>,
+) -> Result<Option<serde_json::Value>, IpcError> {
     let session = state.get_session()?;
     let ws_path = session.workspace_file();
     if !ws_path.exists() {
@@ -37,7 +44,10 @@ pub async fn workspace_load(state: State<'_, AppState>) -> Result<Option<serde_j
 }
 
 #[tauri::command]
-pub async fn workspace_save(state: State<'_, AppState>, workspace: serde_json::Value) -> Result<(), IpcError> {
+pub async fn workspace_save(
+    state: State<'_, AppState>,
+    workspace: serde_json::Value,
+) -> Result<(), IpcError> {
     let session = state.get_session()?;
     let ws_path = session.workspace_file();
     let json = serde_json::to_string_pretty(&workspace).map_err(AppError::from)?;
@@ -64,9 +74,10 @@ pub async fn item_style_set(
     style: Option<ItemStyle>,
 ) -> Result<(), IpcError> {
     let session = state.get_session()?;
-    let _lock = session.write_lock.lock().map_err(|_| {
-        AppError::Io("failed to acquire write lock".into())
-    })?;
+    let _lock = session
+        .write_lock
+        .lock()
+        .map_err(|_| AppError::Io("failed to acquire write lock".into()))?;
 
     let cfg_path = session.config_file();
     let mut config: VaultConfig = if cfg_path.exists() {
@@ -77,8 +88,12 @@ pub async fn item_style_set(
     };
 
     match style {
-        Some(s) => { config.item_styles.insert(path, s); }
-        None => { config.item_styles.remove(&path); }
+        Some(s) => {
+            config.item_styles.insert(path, s);
+        }
+        None => {
+            config.item_styles.remove(&path);
+        }
     }
 
     let json = serde_json::to_string_pretty(&config).map_err(AppError::from)?;

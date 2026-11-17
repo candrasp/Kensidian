@@ -61,6 +61,7 @@ function handleGlobalKeydown(e: KeyboardEvent) {
   else if (mod && key === 'o') { e.preventDefault(); uiStore.modal = uiStore.modal === 'quick-switcher' ? null : 'quick-switcher' }
   else if (mod && e.key === ',') { e.preventDefault(); uiStore.modal = uiStore.modal === 'settings' ? null : 'settings' }
   else if (mod && key === 'e') { e.preventDefault(); tabsStore.toggleMode() }
+  else if (mod && e.shiftKey && key === 'f') { e.preventDefault(); uiStore.modal = uiStore.modal === 'search' ? null : 'search' }
   else if (mod && e.shiftKey && key === 't') { e.preventDefault(); uiStore.toggleFormatToolbar() }
   else if (mod && e.shiftKey && key === 'c') {
     e.preventDefault()

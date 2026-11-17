@@ -1,13 +1,13 @@
-use std::fs;
-use std::path::PathBuf;
-use std::sync::Arc;
-use notify::{RecursiveMode, Watcher};
-use tauri::{AppHandle, Emitter, Manager, State};
+use crate::constants::RECENT_VAULTS_MAX;
 use crate::error::{AppError, IpcError};
 use crate::models::VaultInfo;
 use crate::state::{AppState, VaultSession};
 use crate::vault::names::validate_component_name;
-use crate::constants::RECENT_VAULTS_MAX;
+use notify::{RecursiveMode, Watcher};
+use std::fs;
+use std::path::PathBuf;
+use std::sync::Arc;
+use tauri::{AppHandle, Emitter, Manager, State};
 
 fn update_recent_vaults(app_state: &AppState, info: &VaultInfo) -> Result<(), AppError> {
     let recent_path = app_state.dirs.recent_file();
@@ -45,7 +45,10 @@ pub async fn vault_open(
         .unwrap_or("Vault")
         .to_string();
 
-    let clean_path = canonical.to_string_lossy().trim_start_matches(r"\\?\").to_string();
+    let clean_path = canonical
+        .to_string_lossy()
+        .trim_start_matches(r"\\?\")
+        .to_string();
 
     let info = VaultInfo {
         path: clean_path.clone(),
@@ -56,7 +59,11 @@ pub async fn vault_open(
     // agar path_starts_with check di resolve() konsisten.
     let canonical_root = PathBuf::from(&clean_path);
 
-    let session = Arc::new(VaultSession::new(info.clone(), path_buf.clone(), canonical_root));
+    let session = Arc::new(VaultSession::new(
+        info.clone(),
+        path_buf.clone(),
+        canonical_root,
+    ));
     let kensidian_dir = session.kensidian_dir();
     if !kensidian_dir.exists() {
         fs::create_dir_all(&kensidian_dir).map_err(AppError::from)?;
@@ -82,17 +89,21 @@ pub async fn vault_open(
 
     // Setup file watcher untuk vault:changed event
     let app_handle = app.clone();
-    let mut watcher = notify::recommended_watcher(move |res: Result<notify::Event, notify::Error>| {
-        if let Ok(event) = res {
-            let dominated_by_tmp = event.paths.iter().any(|p| {
-                p.to_string_lossy().contains(".kensidian")
-                    || p.file_name().map(|n| n.to_string_lossy().starts_with('.')).unwrap_or(false)
-            });
-            if !dominated_by_tmp {
-                let _ = app_handle.emit("vault:changed", ());
+    let mut watcher =
+        notify::recommended_watcher(move |res: Result<notify::Event, notify::Error>| {
+            if let Ok(event) = res {
+                let dominated_by_tmp = event.paths.iter().any(|p| {
+                    p.to_string_lossy().contains(".kensidian")
+                        || p.file_name()
+                            .map(|n| n.to_string_lossy().starts_with('.'))
+                            .unwrap_or(false)
+                });
+                if !dominated_by_tmp {
+                    let _ = app_handle.emit("vault:changed", ());
+                }
             }
-        }
-    }).ok();
+        })
+        .ok();
 
     if let Some(ref mut w) = watcher {
         let _ = w.watch(&canonical, RecursiveMode::Recursive);
@@ -102,9 +113,10 @@ pub async fn vault_open(
     }
 
     {
-        let mut session_lock = state.session.write().map_err(|_| {
-            AppError::Io("failed to acquire session write lock".into())
-        })?;
+        let mut session_lock = state
+            .session
+            .write()
+            .map_err(|_| AppError::Io("failed to acquire session write lock".into()))?;
         *session_lock = Some(session);
     }
 
@@ -136,9 +148,10 @@ pub async fn vault_create(
 
 #[tauri::command]
 pub async fn vault_close(state: State<'_, AppState>) -> Result<(), IpcError> {
-    let mut session_lock = state.session.write().map_err(|_| {
-        AppError::Io("failed to acquire session write lock".into())
-    })?;
+    let mut session_lock = state
+        .session
+        .write()
+        .map_err(|_| AppError::Io("failed to acquire session write lock".into()))?;
     *session_lock = None;
     Ok(())
 }

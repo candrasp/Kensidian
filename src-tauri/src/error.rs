@@ -11,6 +11,7 @@ pub enum IpcErrorCode {
     Denied,
     TooLarge,
     InvalidName,
+    InvalidInput,
     Io,
     SyncNotConfigured,
     SyncAuth,
@@ -53,6 +54,9 @@ pub enum AppError {
     #[error("invalid name or path: {0}")]
     InvalidName(String),
 
+    #[error("invalid input: {0}")]
+    InvalidInput(String),
+
     #[error("io error: {0}")]
     Io(String),
 
@@ -78,6 +82,7 @@ impl AppError {
             Self::Denied(_) => IpcErrorCode::Denied,
             Self::TooLarge(_) => IpcErrorCode::TooLarge,
             Self::InvalidName(_) => IpcErrorCode::InvalidName,
+            Self::InvalidInput(_) => IpcErrorCode::InvalidInput,
             Self::Io(_) => IpcErrorCode::Io,
             Self::SyncNotConfigured(_) => IpcErrorCode::SyncNotConfigured,
             Self::SyncAuth(_) => IpcErrorCode::SyncAuth,

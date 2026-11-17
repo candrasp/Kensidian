@@ -1,7 +1,7 @@
+use crate::error::{AppError, IpcError};
+use crate::models::VaultInfo;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, RwLock};
-use crate::models::VaultInfo;
-use crate::error::{AppError, IpcError};
 
 #[derive(Debug, Clone)]
 pub struct AppDirs {
@@ -68,9 +68,10 @@ impl AppState {
     }
 
     pub fn get_session(&self) -> Result<Arc<VaultSession>, IpcError> {
-        let lock = self.session.read().map_err(|_| {
-            AppError::Io("failed to acquire session read lock".into())
-        })?;
+        let lock = self
+            .session
+            .read()
+            .map_err(|_| AppError::Io("failed to acquire session read lock".into()))?;
 
         match lock.as_ref() {
             Some(session) => Ok(Arc::clone(session)),

@@ -172,7 +172,7 @@ function handleApply() {
             :title="name"
             @click="selectIcon('fa-brands', name)"
           >
-            <FontAwesomeIcon :icon="FA_BRAND_ICONS[name]" class="h-4 w-4" />
+            <FontAwesomeIcon :icon="FA_BRAND_ICONS[name]" class="text-lg" />
           </button>
         </template>
       </div>

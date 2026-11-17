@@ -52,3 +52,12 @@ Desktop.ini
 
 # Lainnya
 /Python/
+~
+
+# Tauri Signing Keys (CRITICAL - NEVER COMMIT THESE)
+*.key
+*.key.pub
+~/.tauri/*.key
+~/.tauri/*.key.pub
+**/.tauri/*.key
+**/.tauri/*.key.pub

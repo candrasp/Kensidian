@@ -21,17 +21,24 @@ Aturan turunan:
 3. Boleh: membaca, membuat, dan mengedit file lewat tool editor; memakai diagnostik/Problems milik IDE.
 4. Jika sebuah perintah memang dibutuhkan: **tulis perintah persisnya + alasannya, lalu berhenti dan tunggu user menjalankannya**.
 
-## 2. Cek TypeScript Setelah Selesai Coding
-Setiap tugas yang mengubah `.ts`/`.vue` WAJIB diakhiri dengan pemeriksaan tipe, **tanpa menjalankan perintah** (lihat §1):
-1. Periksa diagnostik/Problems IDE untuk **semua file yang kamu ubah** dan file yang mengimpornya.
-2. Perbaiki semua error tipe. Warning yang berasal dari kode barumu juga diperbaiki.
-3. DILARANG menyelesaikan error dengan `any`, `as unknown as`, `// @ts-ignore`, atau `// @ts-expect-error`. Jika benar-benar tak terhindarkan, beri komentar alasan dan **laporkan ke user**.
-4. Di laporan akhir tulis salah satu, jujur sesuai kondisi:
-   - `Cek TS: diagnostik IDE bersih untuk file yang diubah.`
-   - `Cek TS: belum bisa diverifikasi (alasan).`
-   - `Cek TS: masih ada N masalah (daftar singkat).`
-5. Akhiri dengan menyarankan user menjalankan: `bun run typecheck` (jika script itu belum ada, katakan saja; jangan menambahkannya sendiri).
-6. DILARANG mengklaim "lolos typecheck" bila tidak benar-benar terverifikasi.
+## 2. Verifikasi Wajib Setelah Edit
+
+**TypeScript (.ts / .vue):**
+- **WAJIB jalankan** `bun x tsc --noEmit` setelah edit file TypeScript/Vue
+- Perbaiki semua error sebelum selesai
+- **DILARANG** `any`, `as unknown as`, `// @ts-ignore`, `// @ts-expect-error` tanpa alasan kuat
+- Di laporan akhir tulis jujur:
+  - `✓ Verifikasi TS: bersih (bun x tsc --noEmit)` (jika lolos)
+  - `✗ Verifikasi TS: masih ada N masalah (daftar)` (jika ada issue)
+
+**Rust (.rs):**
+- **WAJIB jalankan** `cargo check --manifest-path "i:\Tauri Project\kensidian\src-tauri\Cargo.toml"` setelah edit file Rust
+- Perbaiki semua error/warning sebelum selesai
+- Di laporan akhir tulis:
+  - `✓ Verifikasi Rust: bersih (cargo check)` (jika lolos)
+  - `✗ Verifikasi Rust: error (daftar)` (jika ada issue)
+
+**Jika TIDAK mengedit file TS/Vue/Rust: JANGAN jalankan verifikasi**
 
 ## 3. Anti-Halusinasi
 - **Jangan mengarang**: nama pustaka, versi, API, prop, event, nama fungsi/file/path, atau perilaku Tauri/Vue/CodeMirror yang tidak kamu yakini.
@@ -82,7 +89,7 @@ Jika batas akan terlewati: **pecah dulu sebelum menyelesaikan tugas** (subkompon
 2. **Baca** hanya file dan bagian FRONTEND.md yang relevan.
 3. **Rencana singkat**: daftar file yang akan dibuat/diubah. Jika >3 file, minta konfirmasi singkat dulu.
 4. **Implementasi minimal** sesuai §4–§6.
-5. **Cek TS** sesuai §2.
+5. **Verifikasi** sesuai §2 (TS dan/atau Rust jika mengedit file tersebut).
 6. **Laporan akhir** memakai format di bawah.
 
 ### Format laporan akhir (ringkas, tanpa menempel ulang kode)
@@ -91,8 +98,7 @@ Ringkasan: <1–2 kalimat apa yang dikerjakan>
 File diubah: <daftar path>
 Asumsi: <jika ada, kalau tidak "tidak ada">
 Belum terverifikasi: <jika ada, kalau tidak "tidak ada">
-Cek TS: <salah satu dari tiga kalimat di §2>
-Perintah yang disarankan untuk kamu jalankan: bun run typecheck
+<status verifikasi TS/Rust dari §2>
 ```
 
 ## 8. Perilaku Saat Ragu atau Bermasalah

@@ -1,9 +1,9 @@
-use std::path::{Path, PathBuf};
-use unicode_normalization::UnicodeNormalization;
 use crate::constants::PATH_MAX_CHARS;
 use crate::error::AppError;
-use crate::vault::names::validate_component_name;
 use crate::state::VaultSession;
+use crate::vault::names::validate_component_name;
+use std::path::{Path, PathBuf};
+use unicode_normalization::UnicodeNormalization;
 
 pub fn validate_rel(raw: &str) -> Result<String, AppError> {
     let nfc: String = raw.nfc().collect();
@@ -39,7 +39,9 @@ fn path_starts_with(child: &Path, parent: &Path) -> bool {
 
     #[cfg(windows)]
     {
-        clean_child.to_lowercase().starts_with(&clean_parent.to_lowercase())
+        clean_child
+            .to_lowercase()
+            .starts_with(&clean_parent.to_lowercase())
     }
     #[cfg(not(windows))]
     {
@@ -61,7 +63,10 @@ pub fn resolve(session: &VaultSession, rel: &str) -> Result<PathBuf, AppError> {
             return Err(AppError::Denied("path escapes vault root".into()));
         }
         // Strip UNC prefix agar path konsisten dengan canonical_root
-        let clean = canonical.to_string_lossy().trim_start_matches(r"\\?\").to_string();
+        let clean = canonical
+            .to_string_lossy()
+            .trim_start_matches(r"\\?\")
+            .to_string();
         return Ok(PathBuf::from(clean));
     }
 
