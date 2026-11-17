@@ -2,14 +2,15 @@ import { ref } from 'vue'
 import { check } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
 
-export function useUpdater() {
-  const isChecking = ref(false)
-  const isDownloading = ref(false)
-  const downloadProgress = ref(0)
-  const availableVersion = ref<string | null>(null)
-  const releaseDate = ref<string | null>(null)
-  const releaseNotes = ref<string | null>(null)
+// Shared state across components
+const isChecking = ref(false)
+const isDownloading = ref(false)
+const downloadProgress = ref(0)
+const availableVersion = ref<string | null>(null)
+const releaseDate = ref<string | null>(null)
+const releaseNotes = ref<string | null>(null)
 
+export function useUpdater() {
   async function checkForUpdate() {
     isChecking.value = true
     availableVersion.value = null

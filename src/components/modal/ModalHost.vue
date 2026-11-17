@@ -4,6 +4,7 @@ import QuickSwitcher from '@/components/modal/QuickSwitcher.vue'
 import SettingsModal from '@/components/modal/SettingsModal.vue'
 import HelpModal from '@/components/modal/HelpModal.vue'
 import SearchModal from '@/components/modal/SearchModal.vue'
+import UpdateModal from '@/components/modal/UpdateModal.vue'
 
 const uiStore = useUiStore()
 
@@ -28,6 +29,10 @@ function closeModal() {
     />
     <SearchModal
       v-else-if="uiStore.modal === 'search'"
+      @close="closeModal"
+    />
+    <UpdateModal
+      v-else-if="uiStore.modal === 'update'"
       @close="closeModal"
     />
   </Teleport>
