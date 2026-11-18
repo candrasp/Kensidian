@@ -73,6 +73,7 @@ jobs:
           tagName: v__VERSION__
           releaseName: "Kensidian v__VERSION__"
           releaseBodyFile: RELEASE_NOTES.md
+          releaseNotesFile: RELEASE_NOTES.md
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
