@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ListOrdered, X } from 'lucide-vue-next'
+import { ListOrdered, PanelRight } from 'lucide-vue-next'
 import { useUiStore } from '@/stores/ui'
 import { t } from '@/lib/i18n/id'
 import IconButton from '@/components/ui/IconButton.vue'
@@ -28,8 +28,9 @@ const uiStore = useUiStore()
         <span>{{ t.outline }}</span>
       </div>
       <IconButton
-        :icon="X"
-        :label="t.close"
+        :icon="PanelRight"
+        :label="t.hideRightSidebar"
+        :active="true"
         @click="uiStore.toggleRightSidebar"
       />
     </div>

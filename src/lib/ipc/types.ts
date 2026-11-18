@@ -10,6 +10,7 @@ export interface TabState {
   path: string | null
   mode: NoteMode
   scrollTop: number
+  scrollLine: number
   cursor: { anchor: number; head: number } | null
   history: string[]
   historyIndex: number

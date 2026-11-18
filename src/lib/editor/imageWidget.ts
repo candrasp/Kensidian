@@ -34,6 +34,7 @@ class ImageWidget extends WidgetType {
   }
 
   toDOM(view: EditorView): HTMLElement {
+    const isReadOnly = view.state.readOnly
     const wrap = document.createElement('div')
     wrap.className = 'cm-image-container relative inline-block group my-2 select-none max-w-full'
 
@@ -51,92 +52,95 @@ class ImageWidget extends WidgetType {
     }
     img.style.maxWidth = '100%'
 
-    const updateDoc = (w: number) => {
-      view.dispatch({
-        changes: { from: this.from, to: this.to, insert: `![[${this.fileName}|${w}]]` },
+    wrap.appendChild(img)
+
+    // Jika mode read-only (view mode), jangan tampilkan toolbar resize/edit dan jangan seleksi markdown
+    if (!isReadOnly) {
+      const updateDoc = (w: number) => {
+        view.dispatch({
+          changes: { from: this.from, to: this.to, insert: `![[${this.fileName}|${w}]]` },
+        })
+      }
+
+      // Mini Toolbar Preset di atas gambar (Badge Ukuran + 25%, 50%, 100%, -, +, ✎)
+      const toolbar = document.createElement('div')
+      toolbar.className =
+        'absolute top-2 left-2 flex items-center gap-1 bg-panel-alt/90 backdrop-blur-xs border border-line text-fg text-[11px] px-1.5 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity z-20 shadow-md pointer-events-auto'
+
+      const sizeBadge = document.createElement('span')
+      sizeBadge.className = 'px-1.5 py-0.5 text-fg-muted font-mono text-[10px] border-r border-line mr-0.5 select-none'
+      sizeBadge.textContent = this.width || '100%'
+      toolbar.appendChild(sizeBadge)
+
+      const makeBtn = (txt: string, title: string, onClick: () => void) => {
+        const b = document.createElement('button')
+        b.type = 'button'
+        b.textContent = txt
+        b.title = title
+        b.className = 'px-1.5 py-0.5 rounded hover:bg-hover active:bg-panel cursor-pointer font-medium text-fg-muted hover:text-fg'
+        b.addEventListener('click', (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          onClick()
+        })
+        toolbar.appendChild(b)
+      }
+
+      makeBtn('25%', 'Ukuran kecil (200px)', () => updateDoc(200))
+      makeBtn('50%', 'Ukuran sedang (420px)', () => updateDoc(420))
+      makeBtn('100%', 'Ukuran penuh (800px)', () => updateDoc(800))
+      makeBtn('−', 'Perkecil 50px', () => updateDoc(Math.max(100, (img.offsetWidth || 400) - 50)))
+      makeBtn('+', 'Perbesar 50px', () => updateDoc(Math.min(1200, (img.offsetWidth || 400) + 50)))
+      makeBtn('✎', 'Edit teks markdown', () => {
+        view.dispatch({ selection: { anchor: this.from, head: this.to } })
+        view.focus()
       })
-    }
 
-    // Mini Toolbar Preset di atas gambar (Badge Ukuran + 25%, 50%, 100%, -, +, ✎)
-    const toolbar = document.createElement('div')
-    toolbar.className =
-      'absolute top-2 left-2 flex items-center gap-1 bg-panel-alt/90 backdrop-blur-xs border border-line text-fg text-[11px] px-1.5 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity z-20 shadow-md pointer-events-auto'
+      // Grip Handle Resize Samping (Desain standar industri dengan grip bar || elegan)
+      const resizer = document.createElement('div')
+      resizer.className =
+        'cm-image-resizer absolute top-1/2 -right-3 -translate-y-1/2 w-4 h-12 bg-panel-alt hover:bg-hover border border-line hover:border-fg-muted rounded-md shadow-md flex items-center justify-center cursor-ew-resize opacity-0 group-hover:opacity-100 transition-all z-20 select-none'
+      resizer.title = 'Tarik ke samping untuk mengubah ukuran gambar'
+      resizer.innerHTML =
+        '<div class="flex gap-0.5 pointer-events-none opacity-60"><div class="w-0.5 h-3.5 bg-fg-muted rounded-full"></div><div class="w-0.5 h-3.5 bg-fg-muted rounded-full"></div></div>'
 
-    const sizeBadge = document.createElement('span')
-    sizeBadge.className = 'px-1.5 py-0.5 text-fg-muted font-mono text-[10px] border-r border-line mr-0.5 select-none'
-    sizeBadge.textContent = this.width || '100%'
-    toolbar.appendChild(sizeBadge)
-
-    const makeBtn = (txt: string, title: string, onClick: () => void) => {
-      const b = document.createElement('button')
-      b.type = 'button'
-      b.textContent = txt
-      b.title = title
-      b.className = 'px-1.5 py-0.5 rounded hover:bg-hover active:bg-panel cursor-pointer font-medium text-fg-muted hover:text-fg'
-      b.addEventListener('click', (e) => {
+      resizer.addEventListener('mousedown', (e: MouseEvent) => {
         e.preventDefault()
         e.stopPropagation()
-        onClick()
+
+        const startX = e.clientX
+        const startWidth = img.offsetWidth
+
+        const onMouseMove = (moveEvent: MouseEvent) => {
+          const delta = moveEvent.clientX - startX
+          const newWidth = Math.max(80, Math.min(1200, Math.round(startWidth + delta)))
+          img.style.width = `${newWidth}px`
+          sizeBadge.textContent = `${newWidth}px`
+        }
+
+        const onMouseUp = (upEvent: MouseEvent) => {
+          window.removeEventListener('mousemove', onMouseMove)
+          window.removeEventListener('mouseup', onMouseUp)
+          const delta = upEvent.clientX - startX
+          const finalWidth = Math.max(80, Math.min(1200, Math.round(startWidth + delta)))
+          updateDoc(finalWidth)
+        }
+
+        window.addEventListener('mousemove', onMouseMove)
+        window.addEventListener('mouseup', onMouseUp)
       })
-      toolbar.appendChild(b)
+
+      wrap.appendChild(toolbar)
+      wrap.appendChild(resizer)
+
+      // Klik gambar → pindah selection ke range markdown gambar di mode edit
+      wrap.addEventListener('click', (e) => {
+        if ((e.target as HTMLElement).closest('button')) return
+        e.preventDefault()
+        view.dispatch({ selection: { anchor: this.from, head: this.to } })
+        view.focus()
+      })
     }
-
-    makeBtn('25%', 'Ukuran kecil (200px)', () => updateDoc(200))
-    makeBtn('50%', 'Ukuran sedang (420px)', () => updateDoc(420))
-    makeBtn('100%', 'Ukuran penuh (800px)', () => updateDoc(800))
-    makeBtn('−', 'Perkecil 50px', () => updateDoc(Math.max(100, (img.offsetWidth || 400) - 50)))
-    makeBtn('+', 'Perbesar 50px', () => updateDoc(Math.min(1200, (img.offsetWidth || 400) + 50)))
-    makeBtn('✎', 'Edit teks markdown', () => {
-      view.dispatch({ selection: { anchor: this.from, head: this.to } })
-      view.focus()
-    })
-
-    // Grip Handle Resize Samping (Desain standar industri dengan grip bar || elegan)
-    const resizer = document.createElement('div')
-    resizer.className =
-      'cm-image-resizer absolute top-1/2 -right-3 -translate-y-1/2 w-4 h-12 bg-panel-alt hover:bg-hover border border-line hover:border-fg-muted rounded-md shadow-md flex items-center justify-center cursor-ew-resize opacity-0 group-hover:opacity-100 transition-all z-20 select-none'
-    resizer.title = 'Tarik ke samping untuk mengubah ukuran gambar'
-    resizer.innerHTML =
-      '<div class="flex gap-0.5 pointer-events-none opacity-60"><div class="w-0.5 h-3.5 bg-fg-muted rounded-full"></div><div class="w-0.5 h-3.5 bg-fg-muted rounded-full"></div></div>'
-
-    resizer.addEventListener('mousedown', (e: MouseEvent) => {
-      e.preventDefault()
-      e.stopPropagation()
-
-      const startX = e.clientX
-      const startWidth = img.offsetWidth
-
-      const onMouseMove = (moveEvent: MouseEvent) => {
-        const delta = moveEvent.clientX - startX
-        const newWidth = Math.max(80, Math.min(1200, Math.round(startWidth + delta)))
-        img.style.width = `${newWidth}px`
-        sizeBadge.textContent = `${newWidth}px`
-      }
-
-      const onMouseUp = (upEvent: MouseEvent) => {
-        window.removeEventListener('mousemove', onMouseMove)
-        window.removeEventListener('mouseup', onMouseUp)
-        const delta = upEvent.clientX - startX
-        const finalWidth = Math.max(80, Math.min(1200, Math.round(startWidth + delta)))
-        updateDoc(finalWidth)
-      }
-
-      window.addEventListener('mousemove', onMouseMove)
-      window.addEventListener('mouseup', onMouseUp)
-    })
-
-    wrap.appendChild(img)
-    wrap.appendChild(toolbar)
-    wrap.appendChild(resizer)
-
-    // Klik gambar → pindah selection ke range markdown gambar
-    // Sehingga Delete/Backspace dari CodeMirror akan menghapus range tersebut
-    wrap.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).closest('button')) return
-      e.preventDefault()
-      view.dispatch({ selection: { anchor: this.from, head: this.to } })
-      view.focus()
-    })
 
     return wrap
   }
@@ -178,7 +182,9 @@ export function imagePreviewExtension(getVaultPath: () => string | undefined) {
             const matchFrom = from + match.index
             const matchTo = matchFrom + match[0].length
 
-            const isEditingExplicitly = sel.from >= matchFrom && sel.to <= matchTo && !sel.empty
+            // Di mode view (readOnly), jangan pernah bongkar widget gambar menjadi teks mentah
+            const isEditingExplicitly =
+              !state.readOnly && sel.from >= matchFrom && sel.to <= matchTo && !sel.empty
             if (isEditingExplicitly) continue
 
             const { fileName, alt, width, height } = parseImageAttributes(match[1])

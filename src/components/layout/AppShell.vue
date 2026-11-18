@@ -12,7 +12,6 @@ import ResizeHandle from './ResizeHandle.vue'
 import TabBar from '@/components/tabs/TabBar.vue'
 import StatusBar from './StatusBar.vue'
 import WelcomeScreen from './WelcomeScreen.vue'
-import ViewPane from '@/components/editor/ViewPane.vue'
 import EditorPane from '@/components/editor/EditorPane.vue'
 import FormatToolbar from '@/components/editor/FormatToolbar.vue'
 import EditorContextMenu from '@/components/editor/EditorContextMenu.vue'
@@ -32,25 +31,13 @@ const maxRightSidebar = () => Math.min(480, window.innerWidth - 420)
 const editorView = shallowRef<EditorView | null>(null)
 
 function handleScrollToHeading(heading: { text: string; line: number }) {
-  if (tabsStore.activeTab?.mode === 'edit' && editorView.value) {
+  if (editorView.value) {
     const lineObj = editorView.value.state.doc.line(Math.min(heading.line, editorView.value.state.doc.lines))
     editorView.value.dispatch({
       selection: { anchor: lineObj.from },
       scrollIntoView: true,
     })
     editorView.value.focus()
-  } else {
-    const cleanHeadingText = heading.text.replace(/`([^`]+)`/g, '$1').trim()
-    const headings = Array.from(
-      document.querySelectorAll<HTMLElement>(
-        '.view-content h1, .view-content h2, .view-content h3, .view-content h4, .view-content h5, .view-content h6'
-      )
-    )
-    const matched = headings.find((el) => {
-      const elText = el.textContent?.trim() ?? ''
-      return elText === heading.text || elText === cleanHeadingText
-    })
-    matched?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 }
 
@@ -133,16 +120,11 @@ watch(
             :view="editorView"
           >
             <EditorPane
-              v-if="tabsStore.activeTab?.mode === 'edit'"
               :content="tabsStore.activeContent"
               :path="tabsStore.activePath"
+              :mode="tabsStore.activeTab?.mode ?? 'view'"
               @update:content="tabsStore.activeContent = $event"
               @view="editorView = $event"
-            />
-            <ViewPane
-              v-else
-              :content="tabsStore.activeContent"
-              :path="tabsStore.activePath"
             />
           </EditorContextMenu>
           <NewTabPage v-else />

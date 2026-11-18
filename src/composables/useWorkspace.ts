@@ -55,11 +55,12 @@ export function useWorkspace() {
         width: uiStore.rightSidebarWidth,
         activeTab: uiStore.activeRightSidebarTab,
       },
-      tabs: tabsStore.tabs.map(({ id, path, mode, scrollTop, cursor, history, historyIndex }) => ({
+      tabs: tabsStore.tabs.map(({ id, path, mode, scrollTop, scrollLine, cursor, history, historyIndex }) => ({
         id,
         path,
         mode,
         scrollTop,
+        scrollLine,
         cursor,
         history,
         historyIndex,

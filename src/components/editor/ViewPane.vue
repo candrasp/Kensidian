@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { renderMarkdown } from '@/lib/markdown/render'
 import { toggleTaskInContent } from '@/lib/markdown/taskList'
 import { ipc } from '@/lib/ipc'
@@ -18,27 +18,109 @@ const vaultStore = useVaultStore()
 const toastStore = useToastStore()
 const containerEl = ref<HTMLDivElement | null>(null)
 
+let restoring = false
+let restoringTimer: ReturnType<typeof setTimeout> | null = null
+let resizeObserver: ResizeObserver | null = null
+
 // State Floating Popover Swatch Global
 const hoverColor = ref<string | null>(null)
 const popoverPos = ref<{ x: number; y: number; placeAbove: boolean }>({ x: 0, y: 0, placeAbove: true })
 
 const rendered = computed(() => renderMarkdown(props.content, vaultStore.current?.path))
 
+function currentTopLine(): number {
+  const c = containerEl.value
+  if (!c) return 1
+  const top = c.getBoundingClientRect().top
+  let line = 1
+  for (const el of c.querySelectorAll<HTMLElement>('[data-source-line]')) {
+    const r = el.getBoundingClientRect()
+    if (r.top <= top + 1 && r.bottom > top) line = Number(el.dataset.sourceLine)
+    else if (r.top > top + 1) break
+  }
+  return line
+}
+
+function scrollToLine(line: number) {
+  const c = containerEl.value
+  if (!c) return
+  let target: HTMLElement | null = null
+  for (const el of c.querySelectorAll<HTMLElement>('[data-source-line]')) {
+    if (Number(el.dataset.sourceLine) <= line) target = el
+    else break
+  }
+  if (!target) {
+    c.scrollTop = 0
+    return
+  }
+  c.scrollTop += target.getBoundingClientRect().top - c.getBoundingClientRect().top
+}
+
+function stopRestoring() {
+  restoring = false
+  if (restoringTimer) {
+    clearTimeout(restoringTimer)
+    restoringTimer = null
+  }
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
+  }
+  if (containerEl.value) {
+    containerEl.value.removeEventListener('wheel', stopRestoring)
+    containerEl.value.removeEventListener('touchstart', stopRestoring)
+    containerEl.value.removeEventListener('pointerdown', stopRestoring)
+    containerEl.value.removeEventListener('keydown', stopRestoring)
+  }
+}
+
 function restoreScroll() {
   nextTick(() => {
-    if (containerEl.value && tabsStore.activeTab) {
-      containerEl.value.scrollTop = tabsStore.activeTab.scrollTop
+    if (!containerEl.value) return
+    const targetLine = tabsStore.activeTab?.scrollLine ?? 1
+
+    restoring = true
+    scrollToLine(targetLine)
+
+    const viewContent = containerEl.value.querySelector('.view-content')
+    if (viewContent) {
+      resizeObserver = new ResizeObserver(() => {
+        if (restoring) scrollToLine(targetLine)
+      })
+      resizeObserver.observe(viewContent)
     }
+
+    containerEl.value.addEventListener('wheel', stopRestoring, { once: true })
+    containerEl.value.addEventListener('touchstart', stopRestoring, { once: true })
+    containerEl.value.addEventListener('pointerdown', stopRestoring, { once: true })
+    containerEl.value.addEventListener('keydown', stopRestoring, { once: true })
+
+    restoringTimer = setTimeout(() => {
+      stopRestoring()
+    }, 400)
   })
 }
 
 function handleScroll() {
-  if (containerEl.value) tabsStore.setScrollTop(containerEl.value.scrollTop)
+  if (containerEl.value && !restoring) {
+    requestAnimationFrame(() => {
+      tabsStore.setScrollLine(currentTopLine())
+    })
+  }
   hoverColor.value = null
 }
 
-watch(() => props.path, restoreScroll)
+watch(() => props.path, () => {
+  stopRestoring()
+  restoreScroll()
+})
 onMounted(restoreScroll)
+onBeforeUnmount(() => {
+  stopRestoring()
+  if (!restoring && containerEl.value) {
+    tabsStore.setScrollLine(currentTopLine())
+  }
+})
 
 async function copyCode(button: HTMLElement) {
   const block = button.closest('.code-block')

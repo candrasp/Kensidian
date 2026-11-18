@@ -1,8 +1,11 @@
 import MarkdownIt from 'markdown-it'
 import type { StateCore } from 'markdown-it'
 import hljs from 'highlight.js'
+import DOMPurify from 'dompurify'
 import { isImageFile, parseImageAttributes, resolveImageUrl } from './image'
 import { taskListPlugin } from './taskList'
+import { mathPlugin } from './math'
+import { isValidCssColor } from '@/lib/color/colorValidator'
 
 export interface HeadingItem {
   level: number
@@ -25,13 +28,17 @@ function escapeHtml(str: string): string {
 const COLOR_REGEX = /(#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b)|(\b(?:rgba?|hsla?)\([^)<>]+\))/gi
 
 function addColorSwatches(rawHtml: string): string {
-  let result = rawHtml.replace(/#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b/g, (m) =>
-    `<span class="color-swatch" data-color="${m}" style="background-color: ${m}"></span>${m}`
-  )
-  const funcRegex = /((?:<span[^>]*>)?(?:rgba?|hsla?)(?:<\/span>)?\s*\((?:[^)<>]|<[^>]+>)+\))/gi
+  let result = rawHtml.replace(/#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b/g, (m) => {
+    return isValidCssColor(m)
+      ? `<span class="color-swatch" data-color="${m}" style="background-color: ${m}"></span>${m}`
+      : m
+  })
+  const funcRegex = /((?:<span[^>]*>)?(?:rgba?|hsla?|hwb)(?:<\/span>)?\s*\((?:[^)<>]|<[^>]+>)+\))/gi
   return result.replace(funcRegex, (m) => {
     const pure = m.replace(/<[^>]+>/g, '').trim()
-    return `<span class="color-swatch" data-color="${pure}" style="background-color: ${pure}"></span>${m}`
+    return isValidCssColor(pure)
+      ? `<span class="color-swatch" data-color="${pure}" style="background-color: ${pure}"></span>${m}`
+      : m
   })
 }
 const COPY_BTN_SVG = `<button type="button" class="code-copy-btn" title="Salin kode" aria-label="Salin kode"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button>`
@@ -41,7 +48,7 @@ const WRAP_LANGS = new Set(['prompt', 'text', 'txt', 'plain', 'markdown', 'md'])
 // Bahasa-bahasa umum yang aman di-auto-detect tanpa false positive GAUSS
 const COMMON_CODE_LANGS = ['javascript', 'typescript', 'css', 'json', 'bash', 'sql', 'python', 'rust', 'html', 'xml', 'yaml', 'markdown']
 
-function detectLanguage(code: string, explicitLang: string): string {
+export function detectLanguage(code: string, explicitLang: string): string {
   if (explicitLang) return explicitLang.toLowerCase()
   const trimmed = code.trim()
 
@@ -102,7 +109,8 @@ const md: InstanceType<typeof MarkdownIt> = new MarkdownIt({
     if (PREVIEW_LANGS.has(effectiveLang)) {
       const header = buildPreviewHeader(safeLang)
       const escapedRaw = escapeHtml(str)
-      return `<div class="code-block code-block--previewable" data-preview-lang="${safeLang}" data-raw="${escapedRaw}">${header}<pre class="code-pane"><code>${escapeHtml(str)}</code></pre><div class="preview-pane" hidden><div class="preview-inner">${str}</div></div></div>`
+      const safeSvg = DOMPurify.sanitize(str, { USE_PROFILES: { svg: true, svgFilters: true } })
+      return `<div class="code-block code-block--previewable" data-preview-lang="${safeLang}" data-raw="${escapedRaw}">${header}<pre class="code-pane"><code>${escapeHtml(str)}</code></pre><div class="preview-pane" hidden><div class="preview-inner">${safeSvg}</div></div></div>`
     }
 
     const langBadge = safeLang ? `<span class="code-lang">${safeLang}</span>` : ''
@@ -130,6 +138,7 @@ const md: InstanceType<typeof MarkdownIt> = new MarkdownIt({
 })
 
 md.use(taskListPlugin)
+md.use(mathPlugin)
 
 // Custom renderer untuk code_inline (`#61afef`, `rgb(...)`) agar tabel/teks ber-backtick memunculkan swatch
 const defaultCodeInline =
@@ -140,13 +149,9 @@ const defaultCodeInline =
 
 md.renderer.rules.code_inline = (tokens, idx, options, env, self) => {
   const token = tokens[idx]
-  const content = token.content
-  if (COLOR_REGEX.test(content)) {
-    COLOR_REGEX.lastIndex = 0
-    const withSwatch = content.replace(COLOR_REGEX, (match) => {
-      return `<span class="color-swatch" data-color="${match}" style="background-color: ${match}"></span>${escapeHtml(match)}`
-    })
-    return `<code>${withSwatch}</code>`
+  const content = token.content.trim()
+  if (isValidCssColor(content)) {
+    return `<code><span class="color-swatch" data-color="${content}" style="background-color: ${content}"></span>${escapeHtml(token.content)}</code>`
   }
   return defaultCodeInline(tokens, idx, options, env, self)
 }
@@ -247,11 +252,13 @@ export function renderMarkdown(source: string, vaultPath?: string): RenderResult
   activeVaultPath = vaultPath
   let frontmatter: string | null = null
   let content = source
+  let frontmatterOffset = 0
 
   const fmMatch = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/)
   if (fmMatch) {
     frontmatter = fmMatch[1]
     content = source.slice(fmMatch[0].length)
+    frontmatterOffset = fmMatch[0].split('\n').length - 1
   }
 
   const headings: HeadingItem[] = []
@@ -265,10 +272,19 @@ export function renderMarkdown(source: string, vaultPath?: string): RenderResult
         .toLowerCase()
         .replace(/[^\w\s-]/g, '')
         .replace(/\s+/g, '-')
-      headings.push({ level, text, id, line: i + 1 })
+      headings.push({ level, text, id, line: i + 1 + frontmatterOffset })
     }
   }
 
-  const html = md.render(content)
+  // Inject data-source-line ke semua block token
+  const tokens = md.parse(content, {})
+  for (const token of tokens) {
+    if (token.map && token.nesting !== -1) {
+      const sourceLine = token.map[0] + 1 + frontmatterOffset
+      token.attrSet('data-source-line', String(sourceLine))
+    }
+  }
+
+  const html = md.renderer.render(tokens, md.options, {})
   return { html, headings, frontmatter }
 }

@@ -1,3 +1,5 @@
+@import "katex/dist/katex.min.css";
+
 /* styles/editor.css - Gaya Tipografi Mode View (.view-content) */
 
 .view-content {
@@ -131,6 +133,11 @@
   vertical-align: middle;
   margin-top: -2px;
   margin-right: 6px;
+  text-indent: 0 !important;
+}
+
+.task-checkbox::after {
+  text-indent: 0 !important;
 }
 
 .cm-task-checkbox {
@@ -634,4 +641,37 @@
   background-size: 14px 14px;
   background-position: 0 0, 0 7px, 7px -7px, -7px 0;
   background-color: #999;
+}
+
+/* Styling KaTeX Matematika */
+.view-content .katex-block,
+.cm-lp-math-block {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 0;
+  margin: 8px 0;
+  overflow-x: auto;
+  background: transparent;
+}
+
+.cm-lp-math,
+.cm-lp-math-inline,
+.cm-lp-math-block,
+.katex,
+.katex-html {
+  text-indent: 0 !important;
+}
+
+.cm-lp-math {
+  cursor: pointer;
+}
+
+.cm-lp-math:hover {
+  filter: brightness(1.2);
+}
+
+.cm-lp-math-inline {
+  display: inline;
+  padding: 0 1px;
 }

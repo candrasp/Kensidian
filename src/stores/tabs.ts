@@ -8,6 +8,7 @@ function createEmptyTab(): TabState {
     path: null,
     mode: 'view',
     scrollTop: 0,
+    scrollLine: 1,
     cursor: null,
     history: [],
     historyIndex: -1,
@@ -110,6 +111,11 @@ export const useTabsStore = defineStore('tabs', () => {
     if (tab) tab.scrollTop = top
   }
 
+  function setScrollLine(line: number, id?: string) {
+    const tab = id ? tabs.value.find((t) => t.id === id) : activeTab.value
+    if (tab) tab.scrollLine = line
+  }
+
   function closeByPath(path: string) {
     const toClose = tabs.value.filter(
       (t) => t.path === path || (t.path && t.path.startsWith(`${path}/`))
@@ -169,6 +175,7 @@ export const useTabsStore = defineStore('tabs', () => {
     forward,
     toggleMode,
     setScrollTop,
+    setScrollLine,
     reloadTrigger,
     reloadCurrentNote,
   }

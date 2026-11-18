@@ -4,13 +4,10 @@ import {
   Minus,
   Square,
   Copy,
-  Check,
   X,
   PanelLeft,
   ArrowLeft,
   ArrowRight,
-  BookOpen,
-  Pencil,
   RotateCw,
   HelpCircle,
 } from 'lucide-vue-next'
@@ -20,16 +17,13 @@ import { isTauri } from '@/lib/ipc'
 import { useVaultStore } from '@/stores/vault'
 import { useTabsStore } from '@/stores/tabs'
 import { useUiStore } from '@/stores/ui'
-import { useToastStore } from '@/stores/toast'
 import { t } from '@/lib/i18n/id'
 import IconButton from '@/components/ui/IconButton.vue'
 
 const vaultStore = useVaultStore()
 const tabsStore = useTabsStore()
 const uiStore = useUiStore()
-const toastStore = useToastStore()
 const isMaximized = ref(false)
-const isCopied = ref(false)
 let unlistenResize: (() => void) | null = null
 
 const activeNoteTitle = computed(() => {
@@ -45,18 +39,6 @@ const windowTitle = computed(() => {
   parts.push(APP_NAME)
   return parts.join(' - ')
 })
-
-async function handleCopyNote() {
-  if (!tabsStore.activeContent) return
-  try {
-    await navigator.clipboard.writeText(tabsStore.activeContent)
-    isCopied.value = true
-    toastStore.success(t.noteContentCopied)
-    setTimeout(() => { isCopied.value = false }, 1500)
-  } catch {
-    toastStore.error('Gagal menyalin catatan')
-  }
-}
 
 async function handleMinimize() {
   if (isTauri) await getCurrentWindow().minimize()
@@ -113,28 +95,6 @@ onUnmounted(() => {
     </div>
 
     <div class="flex items-center h-full">
-      <div v-if="tabsStore.activePath" class="flex items-center gap-1.5 mr-2">
-        <button
-          type="button"
-          :title="`${t.copyNoteContent} (Ctrl+Shift+C)`"
-          :class="[
-            'inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-[11px] font-medium transition-all duration-150 cursor-pointer select-none',
-            isCopied
-              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold'
-              : 'bg-panel-alt hover:bg-hover text-fg-muted hover:text-fg border border-line',
-          ]"
-          @click="handleCopyNote"
-        >
-          <Check v-if="isCopied" class="h-3 w-3 text-emerald-400" :stroke-width="2" />
-          <span>{{ isCopied ? 'Tersalin' : 'Salin' }}</span>
-        </button>
-        <IconButton
-          :icon="tabsStore.activeTab?.mode === 'edit' ? BookOpen : Pencil"
-          :label="`${tabsStore.activeTab?.mode === 'edit' ? t.toView : t.toEdit} (Ctrl+E)`"
-          @click="tabsStore.toggleMode()"
-        />
-      </div>
-
       <button type="button" :aria-label="t.minimize" class="flex h-full w-[46px] items-center justify-center hover:bg-hover hover:text-fg transition-colors duration-100" @click="handleMinimize">
         <Minus class="h-3.5 w-3.5" :stroke-width="1.75" />
       </button>

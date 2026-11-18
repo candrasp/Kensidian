@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { EditorView, keymap, drawSelection, highlightActiveLine } from '@codemirror/view'
-import { EditorState } from '@codemirror/state'
+import { EditorState, Compartment, Annotation, Transaction, type Extension } from '@codemirror/state'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import { markdown } from '@codemirror/lang-markdown'
+import { ensureSyntaxTree, forceParsing } from '@codemirror/language'
+import { resolveCodeLanguage } from '@/lib/editor/codeLanguages'
+import { GFM } from '@lezer/markdown'
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete'
 import { openSearchPanel, search, searchKeymap } from '@codemirror/search'
 import { baseTheme, markdownHighlightStyle } from '@/lib/editor/theme'
@@ -17,11 +20,16 @@ import { ipc } from '@/lib/ipc'
 import { imagePreviewExtension } from '@/lib/editor/imageWidget'
 import { clipboardPasteExtension } from '@/lib/editor/clipboard'
 import { checkboxExtension } from '@/lib/editor/checkboxWidget'
+import { livePreview } from '@/lib/editor/livePreview'
+import type { NoteMode } from '@/lib/ipc/types'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   content: string
   path: string
-}>()
+  mode?: NoteMode
+}>(), {
+  mode: 'edit'
+})
 
 const emit = defineEmits<{
   (e: 'update:content', val: string): void
@@ -32,8 +40,22 @@ const editorEl = ref<HTMLDivElement | null>(null)
 let view: EditorView | null = null
 let autosaveTimer: ReturnType<typeof setTimeout> | null = null
 let isSaving = false
+let restoring = false
+let restoringTimer: ReturnType<typeof setTimeout> | null = null
+const modeCompartment = new Compartment()
 const tabsStore = useTabsStore()
 const vaultStore = useVaultStore()
+
+const externalChange = Annotation.define<boolean>()
+const PARSE_LIMIT = 500_000
+let fullParseTimer: ReturnType<typeof setTimeout> | null = null
+let scrollTimer: ReturnType<typeof setTimeout> | null = null
+
+function modeExtensions(mode: NoteMode) {
+  return mode === 'view'
+    ? [EditorState.readOnly.of(true), EditorView.editable.of(false), livePreview({ revealOnCursor: false })]
+    : [livePreview({ revealOnCursor: true })]
+}
 
 async function saveNote(savePath: string, text: string) {
   if (isSaving) return
@@ -78,7 +100,7 @@ async function saveNow() {
 }
 
 function scheduleAutosave() {
-  if (!view) return
+  if (!view || props.mode === 'view') return
   const currentText = view.state.doc.toString()
   const tab = tabsStore.activeTab
   if (tab) tab.dirty = true
@@ -91,8 +113,45 @@ function scheduleAutosave() {
   }, 100)
 }
 
-function initEditor() {
-  if (!editorEl.value) return
+function currentTopLine(): number {
+  if (!view) return 1
+  const block = view.lineBlockAtHeight(view.scrollDOM.scrollTop)
+  return view.state.doc.lineAt(block.from).number
+}
+
+function restoreLine(line: number) {
+  if (!view) return
+  const n = Math.min(Math.max(1, line), view.state.doc.lines)
+  view.dispatch({
+    effects: EditorView.scrollIntoView(view.state.doc.line(n).from, { y: 'start', yMargin: 0 }),
+  })
+  view.requestMeasure()
+}
+
+function stopRestoring() {
+  restoring = false
+  if (restoringTimer) {
+    clearTimeout(restoringTimer)
+    restoringTimer = null
+  }
+  if (view) {
+    view.scrollDOM.removeEventListener('wheel', stopRestoring)
+    view.scrollDOM.removeEventListener('touchstart', stopRestoring)
+    view.scrollDOM.removeEventListener('pointerdown', stopRestoring)
+    view.scrollDOM.removeEventListener('keydown', stopRestoring)
+  }
+}
+
+function scheduleFullParse() {
+  if (fullParseTimer) clearTimeout(fullParseTimer)
+  fullParseTimer = setTimeout(() => {
+    if (view && view.state.doc.length <= PARSE_LIMIT) {
+      forceParsing(view, view.state.doc.length, 1000)
+    }
+  }, 300)
+}
+
+function makeExtensions(): Extension[] {
   const customKeymap = keymap.of([
     {
       key: 'Mod-s',
@@ -154,34 +213,73 @@ function initEditor() {
     },
   ])
 
-  const state = EditorState.create({
-    doc: props.content,
-    extensions: [
-      baseTheme,
-      markdown(),
-      markdownHighlightStyle,
-      checkboxExtension(),
-      imagePreviewExtension(() => vaultStore.current?.path),
-      clipboardPasteExtension(),
-      history(),
-      drawSelection(),
-      highlightActiveLine(),
-      EditorView.lineWrapping,
-      closeBrackets(),
-      search({ top: true }),
-      customKeymap,
-      keymap.of([...searchKeymap, ...closeBracketsKeymap, ...defaultKeymap, ...historyKeymap]),
-      EditorView.updateListener.of((update) => {
-        if (update.docChanged) scheduleAutosave()
-      }),
-    ],
-  })
+  return [
+    baseTheme,
+    markdown({
+      extensions: [GFM],
+      codeLanguages: resolveCodeLanguage,
+    }),
+    markdownHighlightStyle,
+    checkboxExtension(),
+    imagePreviewExtension(() => vaultStore.current?.path),
+    clipboardPasteExtension(),
+    history(),
+    drawSelection(),
+    highlightActiveLine(),
+    EditorView.lineWrapping,
+    closeBrackets(),
+    search({ top: true }),
+    customKeymap,
+    keymap.of([...searchKeymap, ...closeBracketsKeymap, ...defaultKeymap, ...historyKeymap]),
+    modeCompartment.of(modeExtensions(props.mode)),
+    EditorView.updateListener.of((update) => {
+      if (!update.docChanged) return
+      if (update.transactions.some((tr) => tr.annotation(externalChange))) return
+      scheduleAutosave()
+      scheduleFullParse()
+    }),
+  ]
+}
+
+function createState(doc: string) {
+  const state = EditorState.create({ doc, extensions: makeExtensions() })
+  if (doc.length <= PARSE_LIMIT) ensureSyntaxTree(state, state.doc.length, 500)
+  return state
+}
+
+function initEditor() {
+  if (!editorEl.value) return
 
   view = new EditorView({
-    state,
+    state: createState(props.content),
     parent: editorEl.value,
   })
+  if (props.content.length <= PARSE_LIMIT) {
+    forceParsing(view, view.state.doc.length, 1000)
+  }
   emit('view', view)
+
+  restoring = true
+  restoreLine(tabsStore.activeTab?.scrollLine ?? 1)
+
+  view.scrollDOM.addEventListener('wheel', stopRestoring, { once: true })
+  view.scrollDOM.addEventListener('touchstart', stopRestoring, { once: true })
+  view.scrollDOM.addEventListener('pointerdown', stopRestoring, { once: true })
+  view.scrollDOM.addEventListener('keydown', stopRestoring, { once: true })
+
+  restoringTimer = setTimeout(() => {
+    stopRestoring()
+  }, 300)
+
+  view.scrollDOM.addEventListener('scroll', handleEditorScroll)
+}
+
+function handleEditorScroll() {
+  if (restoring) return
+  if (scrollTimer) clearTimeout(scrollTimer)
+  scrollTimer = setTimeout(() => {
+    if (view) tabsStore.setScrollLine(currentTopLine())
+  }, 150)
 }
 
 function handleBeforeUnload() {
@@ -206,13 +304,19 @@ onBeforeUnmount(async () => {
   window.removeEventListener('beforeunload', handleBeforeUnload)
   document.removeEventListener('visibilitychange', handleVisibilityChange)
   if (autosaveTimer) clearTimeout(autosaveTimer)
+  if (fullParseTimer) clearTimeout(fullParseTimer)
+  if (scrollTimer) clearTimeout(scrollTimer)
+  stopRestoring()
   if (view) {
+    if (!restoring) {
+      tabsStore.setScrollLine(currentTopLine())
+    }
+    view.scrollDOM.removeEventListener('scroll', handleEditorScroll)
     const text = view.state.doc.toString()
     emit('update:content', text)
     if (tabsStore.activeTab?.dirty) {
       await saveNote(props.path, text)
     }
-    emit('view', null)
     view.destroy()
     view = null
   }
@@ -220,23 +324,58 @@ onBeforeUnmount(async () => {
 
 watch(() => props.path, async (_newPath, oldPath) => {
   if (autosaveTimer) clearTimeout(autosaveTimer)
+  if (scrollTimer) clearTimeout(scrollTimer)
+  stopRestoring()
   if (view && oldPath) {
+    if (!restoring) {
+      tabsStore.setScrollLine(currentTopLine())
+    }
     const text = view.state.doc.toString()
     emit('update:content', text)
     if (tabsStore.tabs.find((t) => t.path === oldPath)?.dirty) {
       await saveNote(oldPath, text)
     }
-    view.destroy()
-    view = null
   }
-  initEditor()
+
+  if (view) {
+    view.setState(createState(props.content))
+    if (props.content.length <= PARSE_LIMIT) {
+      forceParsing(view, view.state.doc.length, 1000)
+    }
+    restoring = true
+    restoreLine(tabsStore.activeTab?.scrollLine ?? 1)
+
+    view.scrollDOM.addEventListener('wheel', stopRestoring, { once: true })
+    view.scrollDOM.addEventListener('touchstart', stopRestoring, { once: true })
+    view.scrollDOM.addEventListener('pointerdown', stopRestoring, { once: true })
+    view.scrollDOM.addEventListener('keydown', stopRestoring, { once: true })
+
+    restoringTimer = setTimeout(() => {
+      stopRestoring()
+    }, 300)
+  }
+})
+
+watch(() => props.mode, (m) => {
+  if (view) {
+    view.dispatch({ effects: modeCompartment.reconfigure(modeExtensions(m)) })
+  }
 })
 
 watch(() => props.content, (newContent) => {
-  if (view && !tabsStore.activeTab?.dirty && view.state.doc.toString() !== newContent) {
+  if (!view || view.state.doc.toString() === newContent) return
+  if (view.state.doc.length === 0) {
+    // muat pertama: pasang state yang sudah ter-parse penuh
+    view.setState(createState(newContent))
+    restoreLine(tabsStore.activeTab?.scrollLine ?? 1)
+    return
+  }
+  if (!tabsStore.activeTab?.dirty) {
     view.dispatch({
       changes: { from: 0, to: view.state.doc.length, insert: newContent },
+      annotations: [externalChange.of(true), Transaction.addToHistory.of(false)],
     })
+    forceParsing(view, view.state.doc.length, 200)
   }
 })
 </script>

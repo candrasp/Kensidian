@@ -1,22 +1,71 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useElementSize } from '@vueuse/core'
-import { Plus, ChevronDown, PanelRight } from 'lucide-vue-next'
+import { Plus, ChevronDown, PanelRight, BookOpen, Pencil, Check, MoreVertical } from 'lucide-vue-next'
 import {
   DropdownMenuRoot,
   DropdownMenuTrigger,
   DropdownMenuPortal,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
 } from 'reka-ui'
 import { useUiStore } from '@/stores/ui'
 import { useTabsStore } from '@/stores/tabs'
+import { useVaultStore } from '@/stores/vault'
+import { useToastStore } from '@/stores/toast'
+import { ipc } from '@/lib/ipc'
 import { t } from '@/lib/i18n/id'
 import IconButton from '@/components/ui/IconButton.vue'
 import TabItem from './TabItem.vue'
+import DeleteConfirmModal from '@/components/modal/DeleteConfirmModal.vue'
 
 const uiStore = useUiStore()
 const tabsStore = useTabsStore()
+const vaultStore = useVaultStore()
+const toastStore = useToastStore()
+
+const isCopied = ref(false)
+const deleteModalOpen = ref(false)
+
+async function handleCopyNote() {
+  if (!tabsStore.activeContent) return
+  try {
+    await navigator.clipboard.writeText(tabsStore.activeContent)
+    isCopied.value = true
+    toastStore.success(t.noteContentCopied)
+    setTimeout(() => { isCopied.value = false }, 1500)
+  } catch {
+    toastStore.error('Gagal menyalin catatan')
+  }
+}
+
+function copyPath() {
+  if (tabsStore.activePath) {
+    navigator.clipboard.writeText(tabsStore.activePath)
+  }
+}
+
+function revealInManager() {
+  if (tabsStore.activePath) {
+    ipc.revealInFileManager(tabsStore.activePath)
+  }
+}
+
+async function handleDelete() {
+  if (tabsStore.activePath) {
+    deleteModalOpen.value = true
+  }
+}
+
+async function handleConfirmDelete() {
+  deleteModalOpen.value = false
+  if (tabsStore.activePath) {
+    const p = tabsStore.activePath
+    await vaultStore.deleteItem(p)
+    tabsStore.closeByPath(p)
+  }
+}
 
 defineEmits<{
   (e: 'new-tab'): void
@@ -54,6 +103,8 @@ function getTabTitle(path: string | null): string {
   const name = path.split('/').pop() ?? path
   return name.replace(/\.md$/, '')
 }
+
+const itemClass = 'rounded-sm px-2 py-1.5 hover:bg-hover cursor-pointer outline-none select-none flex items-center text-xs text-fg'
 </script>
 
 <template>
@@ -101,13 +152,71 @@ function getTabTitle(path: string | null): string {
       </div>
     </div>
 
-    <div class="ml-auto flex items-center gap-1 shrink-0 mb-0.5">
+    <div class="ml-auto flex items-center gap-0.5 shrink-0 mb-0.5">
+      <!-- Tombol dokumen aktif: Salin, Edit/View, More, PanelRight -->
+      <template v-if="tabsStore.activePath">
+        <button
+          type="button"
+          :title="`${t.copyNoteContent} (Ctrl+Shift+C)`"
+          :class="[
+            'inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-[11px] font-medium transition-all duration-150 cursor-pointer select-none mb-0.5',
+            isCopied
+              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold'
+              : 'bg-panel-alt hover:bg-hover text-fg-muted hover:text-fg border border-line',
+          ]"
+          @click="handleCopyNote"
+        >
+          <Check v-if="isCopied" class="h-3 w-3 text-emerald-400" :stroke-width="2" />
+          <span>{{ isCopied ? 'Tersalin' : 'Salin' }}</span>
+        </button>
+
+        <IconButton
+          :icon="tabsStore.activeTab?.mode === 'edit' ? BookOpen : Pencil"
+          :label="`${tabsStore.activeTab?.mode === 'edit' ? t.toView : t.toEdit} (Ctrl+E)`"
+          @click="tabsStore.toggleMode()"
+        />
+
+        <DropdownMenuRoot>
+          <DropdownMenuTrigger as-child>
+            <IconButton :icon="MoreVertical" :label="t.more" />
+          </DropdownMenuTrigger>
+          <DropdownMenuPortal>
+            <DropdownMenuContent
+              side="bottom"
+              align="end"
+              :side-offset="4"
+              class="z-110 min-w-44 rounded-sm border border-line bg-panel-alt p-1 shadow-menu"
+            >
+              <DropdownMenuItem :class="itemClass" @select="copyPath">
+                {{ t.copyPath }}
+              </DropdownMenuItem>
+              <DropdownMenuItem :class="itemClass" @select="revealInManager">
+                {{ t.revealInFileManager }}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator class="my-1 h-px bg-line" />
+              <DropdownMenuItem :class="[itemClass, 'text-danger']" @select="handleDelete">
+                {{ t.delete }}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenuPortal>
+        </DropdownMenuRoot>
+
+        <div class="w-px h-4 bg-line mx-0.5 self-center" />
+      </template>
+
       <IconButton
+        v-if="!uiStore.rightSidebarVisible"
         :icon="PanelRight"
-        :label="uiStore.rightSidebarVisible ? t.hideRightSidebar : t.showRightSidebar"
-        :active="uiStore.rightSidebarVisible"
+        :label="t.showRightSidebar"
         @click="uiStore.toggleRightSidebar"
       />
     </div>
   </div>
+
+  <DeleteConfirmModal
+    :open="deleteModalOpen"
+    :paths="tabsStore.activePath ? [tabsStore.activePath] : []"
+    @close="deleteModalOpen = false"
+    @confirm="handleConfirmDelete"
+  />
 </template>
