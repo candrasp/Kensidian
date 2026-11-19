@@ -31,7 +31,8 @@ if (import.meta.env.PROD) {
       (e.ctrlKey && e.key === 'r') ||
       (e.ctrlKey && e.shiftKey && e.key === 'R') ||
       e.key === 'F12' ||
-      (e.ctrlKey && e.key === 'p')
+      (e.ctrlKey && e.key === 'p') ||
+      (e.ctrlKey && e.key === 'f')
     ) {
       e.preventDefault()
     }

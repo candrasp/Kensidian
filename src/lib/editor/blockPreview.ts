@@ -155,35 +155,53 @@ function remember(key: string, node: HTMLElement) {
   })
 }
 
+const SVG_CHECKER_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h6V3"/><path d="M9 9v6"/><path d="M9 15H3"/><path d="M21 9h-6"/><path d="M15 9v6"/><path d="M15 15h6"/></svg>`
+const SVG_COPY_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`
+const SVG_CHECKED_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+
 // ---- Pratinjau SVG (menggantikan seluruh blok saat mode pratinjau) ----
 class SvgPreviewWidget extends WidgetType {
   constructor(
     readonly pos: number,
     readonly code: string,
+    readonly depth = 0,
   ) {
     super()
   }
   eq(o: SvgPreviewWidget) {
-    return o.pos === this.pos && o.code === this.code
+    return o.pos === this.pos && o.code === this.code && o.depth === this.depth
   }
   get estimatedHeight() {
     return heightCache.get(this.code) ?? 240
   }
   toDOM(view: EditorView) {
-    const block = el('div', 'code-block code-block--previewable cm-lp-svgblock')
+    const indentCls = this.depth > 0 ? ` cm-lp-indent-${this.depth}` : ''
+    const block = el('div', `code-block code-block--previewable cm-lp-svgblock view-content${indentCls}`)
     const head = el('div', 'code-header')
     head.append(el('span', 'code-lang', 'svg'), makeToggle(view, this.pos, 'preview'))
 
     const actions = el('div', 'code-actions')
-    const checker = el('button', 'code-checker-btn', '▦')
+    const checker = el('button', 'code-checker-btn')
     checker.type = 'button'
-    checker.title = 'Latar kotak-kotak'
-    const copy = el('button', 'code-copy-btn', 'Salin')
+    checker.title = 'Latar transparan'
+    checker.setAttribute('aria-label', 'Latar transparan')
+    checker.innerHTML = SVG_CHECKER_ICON
+
+    const copy = el('button', 'code-copy-btn')
     copy.type = 'button'
+    copy.title = 'Salin kode'
+    copy.setAttribute('aria-label', 'Salin kode')
+    copy.innerHTML = SVG_COPY_ICON
     copy.addEventListener('mousedown', (e) => e.preventDefault())
-    copy.addEventListener('click', (e) => {
+    copy.addEventListener('click', async (e) => {
       e.preventDefault()
-      copyText(this.code, t.codeCopied)
+      await copyText(this.code, t.codeCopied)
+      copy.innerHTML = SVG_CHECKED_ICON
+      copy.classList.add('copied')
+      setTimeout(() => {
+        copy.innerHTML = SVG_COPY_ICON
+        copy.classList.remove('copied')
+      }, 1500)
     })
     actions.append(checker, copy)
     head.append(actions)
@@ -407,7 +425,7 @@ function build(state: EditorState, opts: Opts): DecorationSet {
         if (previewable && opens.has(open.from)) {
           out.push(
             Decoration.replace({
-              widget: new SvgPreviewWidget(open.from, code),
+              widget: new SvgPreviewWidget(open.from, code, depth),
               block: true,
             }).range(open.from, endLine.to),
           )

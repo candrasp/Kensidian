@@ -631,6 +631,11 @@
   overflow: auto;
 }
 
+.view-content .preview-inner svg {
+  max-width: 100%;
+  height: auto;
+}
+
 /* Checkerboard untuk cek SVG transparan */
 .view-content .preview-inner--checker {
   background-image:

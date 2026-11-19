@@ -2,6 +2,19 @@
 
 Semua perubahan penting pada aplikasi Kensidian akan dicatat di file ini.
 
+## [1.2.0] - 2026-11-19
+### Keamanan
+- **Sanitasi HTML Markdown (Anti-Stored XSS):** Mengintegrasikan sanitasi menyeluruh menggunakan `DOMPurify` pada hasil parsing Markdown (`renderMarkdown`) dengan profil aman untuk HTML, SVG, MathML, atribut `data-*`, dan protokol lokal (`asset:`), mencegah potensi eksekusi skrip berbahaya dari catatan maupun release notes.
+
+### Diperbaiki
+- **Highlight Seleksi Mouse pada Blok Kode:** Menghapus layer tiruan `drawSelection()` CodeMirror yang tersembunyi di belakang background solid blok kode dan beralih ke native browser selection dengan styling semi-transparan (`rgba`), sehingga seleksi teks di dalam blok kode tampil alami di atas background kode tanpa menghalangi keterbacaan huruf.
+- **Tampilan Pratinjau Blok Kode SVG (Live Preview):** Memperbaiki styling pratinjau SVG yang sebelumnya berantakan dan bertumpuk vertikal dengan menyematkan class `view-content`, mengganti teks tombol dengan ikon SVG presisi (tombol transparansi kotak-kotak dan salin kode), serta menyelaraskan tombol toggle segmen ("Kode" / "Pratinjau") agar mulus saat beralih mode.
+- **Pencarian Dokumen (Ctrl + F):** Memblokir search bar bawaan browser WebView yang muncul saat menekan `Ctrl + F` dan mengarahkannya langsung ke panel pencarian editor CodeMirror.
+- **Desain Panel Pencarian:** Merombak tampilan panel pencarian editor menjadi floating bar minimalis modern bergaya Obsidian/VS Code dengan tombol navigasi panah `↑` dan `↓`, tombol close `×` yang proporsional dan sejajar tanpa tumpang tindih, serta membersihkan input replace dan checkbox opsi lanjutan yang mengotori tampilan form.
+
+### Dihapus
+- **Pembersihan Dead Code:** Menghapus komponen tak terpakai yang sudah ditinggalkan (`NavHeader.vue`, `SidebarTabs.vue`, dan `ViewPane.vue`) guna merampingkan ukuran bundle dan mempermudah pemeliharaan kode.
+
 ## [1.1.9] - 2026-11-19
 ### Diperbaiki
 - **Navigasi Daftar Isi (Outline):** Perbaikan posisi scroll saat mengklik heading pada Outline agar judul target langsung mendarat tepat di bagian atas viewport editor (`y: 'start'` dengan margin atas) dan tidak tertutup atau berada di bawah layar.

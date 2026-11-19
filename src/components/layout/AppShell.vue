@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { shallowRef, watch, onMounted, onUnmounted } from 'vue'
 import { EditorView } from '@codemirror/view'
+import { openSearchPanel } from '@codemirror/search'
 import { useVaultStore } from '@/stores/vault'
 import { useUiStore } from '@/stores/ui'
 import { useTabsStore } from '@/stores/tabs'
@@ -49,6 +50,10 @@ function handleGlobalKeydown(e: KeyboardEvent) {
   else if (mod && e.key === ',') { e.preventDefault(); uiStore.modal = uiStore.modal === 'settings' ? null : 'settings' }
   else if (mod && key === 'e') { e.preventDefault(); tabsStore.toggleMode() }
   else if (mod && e.shiftKey && key === 'f') { e.preventDefault(); uiStore.modal = uiStore.modal === 'search' ? null : 'search' }
+  else if (mod && !e.shiftKey && key === 'f') {
+    e.preventDefault()
+    if (editorView.value) openSearchPanel(editorView.value)
+  }
   else if (mod && e.shiftKey && key === 't') { e.preventDefault(); uiStore.toggleFormatToolbar() }
   else if (mod && e.shiftKey && key === 'c') {
     e.preventDefault()
@@ -59,8 +64,8 @@ function handleGlobalKeydown(e: KeyboardEvent) {
   }
 }
 
-onMounted(() => window.addEventListener('keydown', handleGlobalKeydown))
-onUnmounted(() => window.removeEventListener('keydown', handleGlobalKeydown))
+onMounted(() => window.addEventListener('keydown', handleGlobalKeydown, true))
+onUnmounted(() => window.removeEventListener('keydown', handleGlobalKeydown, true))
 
 watch(
   [() => tabsStore.activePath, () => tabsStore.reloadTrigger],

@@ -285,6 +285,26 @@ export function renderMarkdown(source: string, vaultPath?: string): RenderResult
     }
   }
 
-  const html = md.renderer.render(tokens, md.options, {})
+  const rawHtml = md.renderer.render(tokens, md.options, {})
+  const html = DOMPurify.sanitize(rawHtml, {
+    USE_PROFILES: { html: true, svg: true, svgFilters: true, mathMl: true },
+    ADD_TAGS: ['svg', 'path', 'rect', 'button'],
+    ADD_ATTR: [
+      'target',
+      'loading',
+      'data-source-line',
+      'data-color',
+      'data-preview-lang',
+      'data-raw',
+      'data-target',
+      'data-href',
+      'data-task',
+      'data-line',
+    ],
+    ALLOW_DATA_ATTR: true,
+    ADD_DATA_URI_TAGS: ['img'],
+    ALLOWED_URI_REGEXP:
+      /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|asset|blob):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+  })
   return { html, headings, frontmatter }
 }

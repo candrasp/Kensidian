@@ -224,7 +224,6 @@ function makeExtensions(): Extension[] {
     imagePreviewExtension(() => vaultStore.current?.path),
     clipboardPasteExtension(),
     history(),
-    drawSelection(),
     highlightActiveLine(),
     EditorView.lineWrapping,
     scrollPastEnd(),
