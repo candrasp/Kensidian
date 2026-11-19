@@ -2,6 +2,10 @@
 
 Semua perubahan penting pada aplikasi Kensidian akan dicatat di file ini.
 
+## [1.2.1] - 2026-11-20
+### Diperbaiki
+- **Duplikasi Entri Vault Terbaru:** Memperbaiki normalisasi path vault di backend Rust (`vault.rs`) dengan menghapus prefix verbatim Windows (`\\?\`), mencegah vault yang sama tampil dua kali di daftar riwayat vault.
+
 ## [1.2.0] - 2026-11-19
 ### Keamanan
 - **Sanitasi HTML Markdown (Anti-Stored XSS):** Mengintegrasikan sanitasi menyeluruh menggunakan `DOMPurify` pada hasil parsing Markdown (`renderMarkdown`) dengan profil aman untuk HTML, SVG, MathML, atribut `data-*`, dan protokol lokal (`asset:`), mencegah potensi eksekusi skrip berbahaya dari catatan maupun release notes.

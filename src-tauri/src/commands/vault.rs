@@ -9,17 +9,42 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, Manager, State};
 
+fn normalize_path_str(raw: &str) -> String {
+    let p = PathBuf::from(raw);
+    let canonical = p.canonicalize().unwrap_or(p);
+    canonical
+        .to_string_lossy()
+        .trim_start_matches(r"\\?\")
+        .to_string()
+}
+
 fn update_recent_vaults(app_state: &AppState, info: &VaultInfo) -> Result<(), AppError> {
     let recent_path = app_state.dirs.recent_file();
-    let mut list: Vec<VaultInfo> = if recent_path.exists() {
+    let raw_list: Vec<VaultInfo> = if recent_path.exists() {
         let content = fs::read_to_string(&recent_path)?;
         serde_json::from_str(&content).unwrap_or_default()
     } else {
         Vec::new()
     };
 
-    list.retain(|v| !v.path.eq_ignore_ascii_case(&info.path));
-    list.insert(0, info.clone());
+    let target_norm = normalize_path_str(&info.path);
+    let mut list: Vec<VaultInfo> = Vec::new();
+    list.push(VaultInfo {
+        path: target_norm.clone(),
+        name: info.name.clone(),
+    });
+
+    for item in raw_list {
+        let norm = normalize_path_str(&item.path);
+        if !norm.eq_ignore_ascii_case(&target_norm)
+            && !list.iter().any(|v| v.path.eq_ignore_ascii_case(&norm))
+        {
+            list.push(VaultInfo {
+                path: norm,
+                name: item.name,
+            });
+        }
+    }
     list.truncate(RECENT_VAULTS_MAX);
 
     let json = serde_json::to_string_pretty(&list)?;
@@ -176,10 +201,11 @@ pub async fn vault_get_current(
     let list: Vec<VaultInfo> = serde_json::from_str(&content).unwrap_or_default();
 
     for item in list {
-        let p = PathBuf::from(&item.path);
+        let norm = normalize_path_str(&item.path);
+        let p = PathBuf::from(&norm);
         if p.exists() && p.is_dir() {
             // Restore session secara otomatis
-            let info = vault_open(app, state, item.path).await?;
+            let info = vault_open(app, state, norm).await?;
             return Ok(Some(info));
         }
     }
@@ -194,6 +220,18 @@ pub async fn vault_list_recent(state: State<'_, AppState>) -> Result<Vec<VaultIn
     }
 
     let content = fs::read_to_string(&recent_path).map_err(AppError::from)?;
-    let list: Vec<VaultInfo> = serde_json::from_str(&content).unwrap_or_default();
+    let raw_list: Vec<VaultInfo> = serde_json::from_str(&content).unwrap_or_default();
+    let mut list: Vec<VaultInfo> = Vec::new();
+
+    for item in raw_list {
+        let norm = normalize_path_str(&item.path);
+        let p = PathBuf::from(&norm);
+        if p.exists() && p.is_dir() && !list.iter().any(|v| v.path.eq_ignore_ascii_case(&norm)) {
+            list.push(VaultInfo {
+                path: norm,
+                name: item.name,
+            });
+        }
+    }
     Ok(list)
 }
