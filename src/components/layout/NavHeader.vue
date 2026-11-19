@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import {
   ArrowLeft,
   ArrowRight,
@@ -22,6 +23,7 @@ import IconButton from '@/components/ui/IconButton.vue'
 
 const tabsStore = useTabsStore()
 const vaultStore = useVaultStore()
+const isMoreMenuOpen = ref(false)
 
 const itemClass = 'rounded-sm px-2 py-1.5 hover:bg-hover cursor-pointer outline-none select-none flex items-center text-xs text-fg'
 
@@ -73,9 +75,9 @@ async function handleDelete() {
         @click="tabsStore.toggleMode()"
       />
 
-      <DropdownMenuRoot>
+      <DropdownMenuRoot v-model:open="isMoreMenuOpen">
         <DropdownMenuTrigger as-child>
-          <IconButton :icon="MoreVertical" :label="t.more" />
+          <IconButton :icon="MoreVertical" :label="t.more" :disable-tooltip="isMoreMenuOpen" />
         </DropdownMenuTrigger>
         <DropdownMenuPortal>
           <DropdownMenuContent

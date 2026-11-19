@@ -2,6 +2,19 @@
 
 Semua perubahan penting pada aplikasi Kensidian akan dicatat di file ini.
 
+## [1.1.9] - 2026-11-19
+### Diperbaiki
+- **Navigasi Daftar Isi (Outline):** Perbaikan posisi scroll saat mengklik heading pada Outline agar judul target langsung mendarat tepat di bagian atas viewport editor (`y: 'start'` dengan margin atas) dan tidak tertutup atau berada di bawah layar.
+- **Scroll Past End di Editor:** Menambahkan ekstensi `scrollPastEnd` pada CodeMirror agar dokumen di bagian akhir tetap dapat di-scroll leluasa ke atas saat navigasi heading.
+- **Highlight Heading Aktif:** Menambahkan status aktif pada butir Outline yang sedang dipilih agar pengguna mengetahui posisi heading saat ini.
+- **Bug Tooltip Macet saat Dropdown Terbuka:** Memperbaiki tooltip yang tetap melayang ketika menu dropdown atau modal dibuka dengan menambahkan kontrol deaktivasi otomatis tooltip pada `IconButton` dan `Tooltip`.
+- **Desain Tooltip Standar:** Mengganti seluruh atribut native `title` pada Tab, tombol tab, dan footer sidebar dengan komponen custom `Tooltip` bergaya desain Kensidian (`bg-panel-alt`, border, shadow).
+- **Tata Letak Tab Bar:** Memindahkan aksi dokumen (Salin, Edit/View, menu opsi lainnya) langsung ke sisi kanan tab bar dengan spasi proporsional agar tidak berdempetan.
+- **Konfirmasi Hapus Dokumen:** Menambahkan modal konfirmasi sebelum menghapus file aktif melalui menu opsi tab bar.
+- **Informasi Jumlah Berkas & Folder:** Memindahkan label ringkasan total berkas dan folder di sidebar kiri ke baris terpisah di atas footer tanpa garis pembatas yang sesak, dilengkapi tooltip nama vault aktif.
+- **Modal Pembaruan Aplikasi (UpdateModal):** Memperbaiki kontras warna tombol "Unduh & Instal" agar teks terbaca jelas di seluruh tema, memperluas area catatan perubahan, serta memberi ruang napas vertikal agar teks tidak menempel ke border bawah.
+- **UTF-8 BOM pada Metadata Updater:** Memastikan file metadata `latest.json` bersih dari karakter BOM agar parser updater Tauri tidak mengalami kegagalan saat memeriksa pembaruan.
+
 ## [1.1.8] - 2026-11-18
 ### Diperbaiki
 - Perbaikan sinkronisasi scroll antara mode Edit dan View: mengganti mekanisme berbasis rasio ke jangkar nomor baris sumber.

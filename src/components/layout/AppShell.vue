@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { shallowRef, watch, onMounted, onUnmounted } from 'vue'
-import type { EditorView } from '@codemirror/view'
+import { EditorView } from '@codemirror/view'
 import { useVaultStore } from '@/stores/vault'
 import { useUiStore } from '@/stores/ui'
 import { useTabsStore } from '@/stores/tabs'
@@ -35,7 +35,7 @@ function handleScrollToHeading(heading: { text: string; line: number }) {
     const lineObj = editorView.value.state.doc.line(Math.min(heading.line, editorView.value.state.doc.lines))
     editorView.value.dispatch({
       selection: { anchor: lineObj.from },
-      scrollIntoView: true,
+      effects: EditorView.scrollIntoView(lineObj.from, { y: 'start', yMargin: 20 }),
     })
     editorView.value.focus()
   }
@@ -96,29 +96,16 @@ watch(
 
       <ResizeHandle
         v-if="uiStore.leftSidebarVisible"
-        side="left"
-        :min="160"
-        :max="maxLeftSidebar"
-        :current-width="uiStore.leftSidebarWidth"
-        @update="uiStore.setLeftSidebarWidth"
-        @commit="uiStore.setLeftSidebarWidth"
-        @reset="uiStore.resetLeftSidebarWidth"
+        side="left" :min="160" :max="maxLeftSidebar" :current-width="uiStore.leftSidebarWidth"
+        @update="uiStore.setLeftSidebarWidth" @commit="uiStore.setLeftSidebarWidth" @reset="uiStore.resetLeftSidebarWidth"
       />
 
       <main class="flex flex-1 flex-col min-w-0 min-h-0 relative bg-app">
         <TabBar @new-tab="tabsStore.openNewTab" />
-
-        <FormatToolbar
-          v-if="tabsStore.activePath && tabsStore.activeTab?.mode === 'edit'"
-          :view="editorView"
-        />
+        <FormatToolbar v-if="tabsStore.activePath && tabsStore.activeTab?.mode === 'edit'" :view="editorView" />
 
         <div class="relative flex-1 min-h-0">
-          <EditorContextMenu
-            v-if="tabsStore.activePath"
-            :mode="tabsStore.activeTab?.mode ?? 'view'"
-            :view="editorView"
-          >
+          <EditorContextMenu v-if="tabsStore.activePath" :mode="tabsStore.activeTab?.mode ?? 'view'" :view="editorView">
             <EditorPane
               :content="tabsStore.activeContent"
               :path="tabsStore.activePath"
@@ -139,13 +126,8 @@ watch(
 
       <ResizeHandle
         v-if="uiStore.rightSidebarVisible"
-        side="right"
-        :min="200"
-        :max="maxRightSidebar"
-        :current-width="uiStore.rightSidebarWidth"
-        @update="uiStore.setRightSidebarWidth"
-        @commit="uiStore.setRightSidebarWidth"
-        @reset="uiStore.resetRightSidebarWidth"
+        side="right" :min="200" :max="maxRightSidebar" :current-width="uiStore.rightSidebarWidth"
+        @update="uiStore.setRightSidebarWidth" @commit="uiStore.setRightSidebarWidth" @reset="uiStore.resetRightSidebarWidth"
       />
 
       <RightSidebar

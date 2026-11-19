@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { Hash } from 'lucide-vue-next'
 import { t } from '@/lib/i18n/id'
 import type { HeadingItem } from '@/lib/markdown/render'
@@ -11,6 +11,13 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'select-heading', heading: HeadingItem): void
 }>()
+
+const activeLine = ref<number | null>(null)
+
+function handleSelect(item: HeadingItem) {
+  activeLine.value = item.line
+  emit('select-heading', item)
+}
 
 const headings = computed<HeadingItem[]>(() => {
   const result: HeadingItem[] = []
@@ -54,8 +61,13 @@ const headings = computed<HeadingItem[]>(() => {
         :key="`${item.line}-${item.text}`"
         type="button"
         :style="{ paddingLeft: `calc(8px + ${(item.level - 1) * 12}px)` }"
-        class="flex items-center gap-1.5 py-1.5 pr-2 rounded-sm text-left text-fg/80 hover:bg-hover hover:text-fg transition-colors duration-100 cursor-pointer outline-none focus-visible:bg-hover"
-        @click="emit('select-heading', item)"
+        class="flex items-center gap-1.5 py-1.5 pr-2 rounded-sm text-left transition-colors duration-100 cursor-pointer outline-none focus-visible:bg-hover"
+        :class="[
+          item.line === activeLine
+            ? 'bg-selected text-fg font-medium'
+            : 'text-fg/80 hover:bg-hover hover:text-fg',
+        ]"
+        @click="handleSelect(item)"
       >
         <Hash
           class="shrink-0 opacity-40"

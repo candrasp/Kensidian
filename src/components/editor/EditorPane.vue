@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
-import { EditorView, keymap, drawSelection, highlightActiveLine } from '@codemirror/view'
+import { EditorView, keymap, drawSelection, highlightActiveLine, scrollPastEnd } from '@codemirror/view'
 import { EditorState, Compartment, Annotation, Transaction, type Extension } from '@codemirror/state'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import { markdown } from '@codemirror/lang-markdown'
@@ -227,6 +227,7 @@ function makeExtensions(): Extension[] {
     drawSelection(),
     highlightActiveLine(),
     EditorView.lineWrapping,
+    scrollPastEnd(),
     closeBrackets(),
     search({ top: true }),
     customKeymap,

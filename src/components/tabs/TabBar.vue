@@ -17,6 +17,7 @@ import { useToastStore } from '@/stores/toast'
 import { ipc } from '@/lib/ipc'
 import { t } from '@/lib/i18n/id'
 import IconButton from '@/components/ui/IconButton.vue'
+import Tooltip from '@/components/ui/Tooltip.vue'
 import TabItem from './TabItem.vue'
 import DeleteConfirmModal from '@/components/modal/DeleteConfirmModal.vue'
 
@@ -27,6 +28,8 @@ const toastStore = useToastStore()
 
 const isCopied = ref(false)
 const deleteModalOpen = ref(false)
+const isMoreMenuOpen = ref(false)
+const isOtherTabsOpen = ref(false)
 
 async function handleCopyNote() {
   if (!tabsStore.activeContent) return
@@ -121,17 +124,18 @@ const itemClass = 'rounded-sm px-2 py-1.5 hover:bg-hover cursor-pointer outline-
       />
 
       <!-- Pill +N lainnya -->
-      <DropdownMenuRoot v-if="hiddenTabs.length > 0">
-        <DropdownMenuTrigger as-child>
-          <button
-            type="button"
-            class="h-7 px-2 mx-1 mb-0.5 rounded-sm flex items-center gap-1 text-xs text-fg-muted hover:bg-hover hover:text-fg transition-colors cursor-pointer outline-none shrink-0"
-            :title="t.otherTabsTooltip(hiddenTabs.length)"
-          >
-            <span class="font-medium text-accent">{{ t.otherTabsCount(hiddenTabs.length) }}</span>
-            <ChevronDown class="h-3 w-3 opacity-60" />
-          </button>
-        </DropdownMenuTrigger>
+      <DropdownMenuRoot v-if="hiddenTabs.length > 0" v-model:open="isOtherTabsOpen">
+        <Tooltip :content="t.otherTabsTooltip(hiddenTabs.length)" side="bottom" :disabled="isOtherTabsOpen">
+          <DropdownMenuTrigger as-child>
+            <button
+              type="button"
+              class="h-7 px-2 mx-1 mb-0.5 rounded-sm flex items-center gap-1 text-xs text-fg-muted hover:bg-hover hover:text-fg transition-colors cursor-pointer outline-none shrink-0"
+            >
+              <span class="font-medium text-accent">{{ t.otherTabsCount(hiddenTabs.length) }}</span>
+              <ChevronDown class="h-3 w-3 opacity-60" />
+            </button>
+          </DropdownMenuTrigger>
+        </Tooltip>
         <DropdownMenuPortal>
           <DropdownMenuContent side="bottom" align="start" :side-offset="4" class="z-110 min-w-48 max-h-64 overflow-y-auto rounded-sm border border-line bg-panel-alt p-1 shadow-menu">
             <DropdownMenuItem
@@ -155,20 +159,21 @@ const itemClass = 'rounded-sm px-2 py-1.5 hover:bg-hover cursor-pointer outline-
     <div class="ml-auto flex items-center gap-0.5 shrink-0 mb-0.5">
       <!-- Tombol dokumen aktif: Salin, Edit/View, More, PanelRight -->
       <template v-if="tabsStore.activePath">
-        <button
-          type="button"
-          :title="`${t.copyNoteContent} (Ctrl+Shift+C)`"
-          :class="[
-            'inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-[11px] font-medium transition-all duration-150 cursor-pointer select-none mb-0.5',
-            isCopied
-              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold'
-              : 'bg-panel-alt hover:bg-hover text-fg-muted hover:text-fg border border-line',
-          ]"
-          @click="handleCopyNote"
-        >
-          <Check v-if="isCopied" class="h-3 w-3 text-emerald-400" :stroke-width="2" />
-          <span>{{ isCopied ? 'Tersalin' : 'Salin' }}</span>
-        </button>
+        <Tooltip :content="`${t.copyNoteContent} (Ctrl+Shift+C)`" side="bottom">
+          <button
+            type="button"
+            :class="[
+              'inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-[11px] font-medium transition-all duration-150 cursor-pointer select-none mb-0.5 mr-1.5',
+              isCopied
+                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold'
+                : 'bg-panel-alt hover:bg-hover text-fg-muted hover:text-fg border border-line',
+            ]"
+            @click="handleCopyNote"
+          >
+            <Check v-if="isCopied" class="h-3 w-3 text-emerald-400" :stroke-width="2" />
+            <span>{{ isCopied ? 'Tersalin' : 'Salin' }}</span>
+          </button>
+        </Tooltip>
 
         <IconButton
           :icon="tabsStore.activeTab?.mode === 'edit' ? BookOpen : Pencil"
@@ -176,9 +181,13 @@ const itemClass = 'rounded-sm px-2 py-1.5 hover:bg-hover cursor-pointer outline-
           @click="tabsStore.toggleMode()"
         />
 
-        <DropdownMenuRoot>
+        <DropdownMenuRoot v-model:open="isMoreMenuOpen">
           <DropdownMenuTrigger as-child>
-            <IconButton :icon="MoreVertical" :label="t.more" />
+            <IconButton
+              :icon="MoreVertical"
+              :label="t.more"
+              :disable-tooltip="isMoreMenuOpen || deleteModalOpen"
+            />
           </DropdownMenuTrigger>
           <DropdownMenuPortal>
             <DropdownMenuContent

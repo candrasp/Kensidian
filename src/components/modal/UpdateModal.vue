@@ -80,18 +80,18 @@ async function handleDownload() {
         </div>
 
         <!-- Release Notes Section -->
-        <div class="space-y-1.5">
-          <span class="text-[11px] font-semibold text-fg-muted uppercase tracking-wider">
+        <div class="space-y-2">
+          <span class="text-[11px] font-semibold text-fg-muted uppercase tracking-wider block">
             {{ t.releaseNotesTitle }}
           </span>
           <div
             v-if="renderedNotes"
-            class="max-h-56 overflow-y-auto rounded-md border border-line/60 bg-panel-alt/50 p-3 text-xs leading-relaxed text-fg select-text prose prose-invert prose-xs max-w-none"
+            class="max-h-60 overflow-y-auto rounded-md border border-line bg-panel-alt/50 px-3.5 py-3 text-xs leading-relaxed text-fg select-text prose prose-invert prose-xs max-w-none [&>*:last-child]:mb-2"
             v-html="renderedNotes"
           />
           <div
             v-else
-            class="rounded-md border border-line/60 bg-panel-alt/40 p-3 text-fg-muted text-[11px]"
+            class="rounded-md border border-line bg-panel-alt/40 px-3.5 py-3 text-fg-muted text-[11px]"
           >
             {{ t.noReleaseNotes }}
           </div>
@@ -99,10 +99,10 @@ async function handleDownload() {
       </div>
 
       <!-- Footer Buttons -->
-      <div class="flex items-center justify-end gap-2 px-4 py-3 border-t border-line bg-panel-alt/40 shrink-0">
+      <div class="flex items-center justify-end gap-2.5 px-4 py-3 border-t border-line bg-panel-alt/40 shrink-0">
         <button
           type="button"
-          class="px-3 py-1.5 rounded-sm border border-line bg-panel hover:bg-hover text-fg-muted hover:text-fg text-xs transition-colors cursor-pointer outline-none disabled:opacity-50"
+          class="px-3.5 py-1.5 rounded-sm border border-line bg-panel hover:bg-hover text-fg-muted hover:text-fg text-xs font-medium transition-colors cursor-pointer outline-none disabled:opacity-50"
           :disabled="isDownloading"
           @click="emit('close')"
         >
@@ -111,11 +111,11 @@ async function handleDownload() {
 
         <button
           type="button"
-          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-accent hover:bg-accent/90 text-white font-medium text-xs transition-colors cursor-pointer outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-sm bg-accent hover:bg-accent-hover active:opacity-90 text-accent-fg font-semibold text-xs transition-colors cursor-pointer outline-none shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
           :disabled="isDownloading"
           @click="handleDownload"
         >
-          <Download v-if="!isDownloading" class="h-3.5 w-3.5" />
+          <Download v-if="!isDownloading" class="h-3.5 w-3.5 stroke-[2.25]" />
           <RefreshCw v-else class="h-3.5 w-3.5 animate-spin" />
           <span v-if="!isDownloading">{{ t.downloadUpdate }}</span>
           <span v-else>{{ t.downloading }} {{ downloadProgress }}%</span>

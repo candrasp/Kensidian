@@ -9,11 +9,13 @@ withDefaults(
     active?: boolean
     disabled?: boolean
     size?: 's' | 'm'
+    disableTooltip?: boolean
   }>(),
   {
     active: false,
     disabled: false,
     size: 's',
+    disableTooltip: false,
   }
 )
 
@@ -23,7 +25,7 @@ defineEmits<{
 </script>
 
 <template>
-  <Tooltip :content="label">
+  <Tooltip :content="disableTooltip ? undefined : label" :disabled="disableTooltip">
     <button
       type="button"
       :aria-label="label"
