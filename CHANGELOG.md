@@ -2,6 +2,13 @@
 
 Semua perubahan penting pada aplikasi Kensidian akan dicatat di file ini.
 
+## [1.2.2] - 2026-11-20
+### Diperbaiki
+- **Optimasi Buka Vault & Overlay Transisi:** Memperbaiki freeze UI dan delay responsif saat beralih atau membuka vault dengan menambahkan overlay transisi (`VaultLoadingOverlay`), memindahkan parsing konfigurasi workspace setelah event load selesai, serta menunda pembacaan riwayat vault agar pembukaan berkas terasa instan.
+- **Konsistensi State Tab saat Ganti Vault:** Memastikan seluruh state tab dan file aktif sebelumnya dibersihkan dengan benar saat membuka vault baru sehingga editor tidak mempertahankan file dari vault sebelumnya.
+- **Render Pencarian Editor (Ctrl+F):** Memperbaiki pemisahan dan styling tombol navigasi dan panel pencarian CodeMirror agar tidak glitch atau menumpuk saat diaktifkan berulang kali.
+- **Scroll & Seleksi Editor:** Menyelaraskan styling seleksi dan scroll editor pada berbagai tema warna agar tetap kontras dan nyaman dibaca.
+
 ## [1.2.1] - 2026-11-20
 ### Diperbaiki
 - **Duplikasi Entri Vault Terbaru:** Memperbaiki normalisasi path vault di backend Rust (`vault.rs`) dengan menghapus prefix verbatim Windows (`\\?\`), mencegah vault yang sama tampil dua kali di daftar riwayat vault.

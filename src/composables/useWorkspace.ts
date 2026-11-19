@@ -5,44 +5,78 @@ import { useVaultStore } from '@/stores/vault'
 import { ipc } from '@/lib/ipc'
 import type { Workspace } from '@/lib/ipc/types'
 
+function sanitizeTabs(rawTabs: Workspace['tabs'], activeTabId: string | null, validNotes: Set<string> | null) {
+  const filtered = rawTabs
+    .filter((t) => !t.path || (validNotes ? validNotes.has(t.path) : true))
+    .map((t) => ({ ...t, dirty: false, mtime: null }))
+  if (filtered.length === 0) return null
+  const activeId = filtered.some((t) => t.id === activeTabId) ? activeTabId! : filtered[0].id
+  return { tabs: filtered, activeId }
+}
+
+function applyUiState(ws: Workspace, ui: ReturnType<typeof useUiStore>) {
+  ui.leftSidebarVisible = ws.leftSidebar.visible
+  ui.leftSidebarWidth = ws.leftSidebar.width
+  ui.activeSidebarTab = ws.leftSidebar.activeTab
+  ui.rightSidebarVisible = ws.rightSidebar.visible
+  ui.rightSidebarWidth = ws.rightSidebar.width
+  ui.activeRightSidebarTab = ws.rightSidebar.activeTab
+}
+
+async function restoreTabsState(
+  rawTabs: Workspace['tabs'],
+  activeTabId: string | null,
+  tabs: ReturnType<typeof useTabsStore>
+) {
+  if (!rawTabs || rawTabs.length === 0) return
+  let validNotes: Set<string> | null = null
+  try {
+    const notes = await ipc.vaultListNotes()
+    validNotes = new Set(notes.map((n) => n.path))
+  } catch {
+    // Abaikan kegagalan list notes
+  }
+  const sanitized = sanitizeTabs(rawTabs, activeTabId, validNotes)
+  if (sanitized) {
+    tabs.tabs = sanitized.tabs
+    tabs.activeId = sanitized.activeId
+  } else {
+    tabs.resetTabs()
+  }
+}
+
 export function useWorkspace() {
   const uiStore = useUiStore()
   const tabsStore = useTabsStore()
   const vaultStore = useVaultStore()
   let saveTimer: ReturnType<typeof setTimeout> | null = null
+  let isLoading = false
 
   async function loadWorkspace() {
     if (!vaultStore.current) return
+    cancelPendingSave()
+    isLoading = true
+    tabsStore.resetTabs()
     try {
       const ws = await ipc.workspaceLoad()
       if (!ws) return
-
-      uiStore.leftSidebarVisible = ws.leftSidebar.visible
-      uiStore.leftSidebarWidth = ws.leftSidebar.width
-      uiStore.activeSidebarTab = ws.leftSidebar.activeTab
-      uiStore.rightSidebarVisible = ws.rightSidebar.visible
-      uiStore.rightSidebarWidth = ws.rightSidebar.width
-      uiStore.activeRightSidebarTab = ws.rightSidebar.activeTab
-
-      if (ws.tabs && ws.tabs.length > 0) {
-        tabsStore.tabs = ws.tabs.map((t) => ({ ...t, dirty: false, mtime: null }))
-        tabsStore.activeId = ws.activeTabId ?? ws.tabs[0].id
-      }
-
+      applyUiState(ws, uiStore)
+      await restoreTabsState(ws.tabs, ws.activeTabId, tabsStore)
       vaultStore.sortOrder = ws.sortOrder ?? 'name-asc'
       vaultStore.autoReveal = ws.autoReveal ?? true
       vaultStore.expanded = new Set(ws.expandedFolders ?? [])
-
-      for (const folder of vaultStore.expanded) {
-        await vaultStore.loadDir(folder)
-      }
+      for (const folder of vaultStore.expanded) await vaultStore.loadDir(folder)
     } catch {
       // Abaikan jika workspace belum ada atau korup
+    } finally {
+      setTimeout(() => {
+        isLoading = false
+      }, 100)
     }
   }
 
   async function saveWorkspace() {
-    if (!vaultStore.current) return
+    if (!vaultStore.current || isLoading || vaultStore.isSwitchingVault) return
     const ws: Workspace = {
       version: 1,
       leftSidebar: {
@@ -80,8 +114,16 @@ export function useWorkspace() {
     }
   }
 
+  function cancelPendingSave() {
+    if (saveTimer) {
+      clearTimeout(saveTimer)
+      saveTimer = null
+    }
+  }
+
   function saveWorkspaceDebounced() {
-    if (saveTimer) clearTimeout(saveTimer)
+    if (vaultStore.isSwitchingVault) return
+    cancelPendingSave()
     saveTimer = setTimeout(() => {
       saveWorkspace()
     }, 500)
@@ -108,7 +150,7 @@ export function useWorkspace() {
     )
 
     window.addEventListener('beforeunload', () => {
-      saveWorkspace()
+      if (!vaultStore.isSwitchingVault) saveWorkspace()
     })
   }
 
@@ -116,6 +158,7 @@ export function useWorkspace() {
     loadWorkspace,
     saveWorkspace,
     saveWorkspaceDebounced,
+    cancelPendingSave,
     setupAutoSave,
   }
 }

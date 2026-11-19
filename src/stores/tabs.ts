@@ -157,6 +157,13 @@ export const useTabsStore = defineStore('tabs', () => {
     reloadTrigger.value++
   }
 
+  function resetTabs() {
+    const initial = createEmptyTab()
+    tabs.value = [initial]
+    activeId.value = initial.id
+    activeContent.value = ''
+  }
+
   return {
     tabs,
     activeId,
@@ -178,5 +185,6 @@ export const useTabsStore = defineStore('tabs', () => {
     setScrollLine,
     reloadTrigger,
     reloadCurrentNote,
+    resetTabs,
   }
 })

@@ -158,6 +158,10 @@ function hideTooltip() {
   hoverTooltip.value.visible = false
 }
 
+watch(() => vaultStore.current?.path, () => {
+  hideTooltip()
+})
+
 function handleKeydown(e: KeyboardEvent) {
   if (renamingPath.value) return
   if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A')) {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
-import { EditorView, keymap, drawSelection, highlightActiveLine, scrollPastEnd } from '@codemirror/view'
+import { EditorView, keymap, highlightActiveLine, scrollPastEnd } from '@codemirror/view'
 import { EditorState, Compartment, Annotation, Transaction, type Extension } from '@codemirror/state'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import { markdown } from '@codemirror/lang-markdown'
@@ -9,6 +9,7 @@ import { resolveCodeLanguage } from '@/lib/editor/codeLanguages'
 import { GFM } from '@lezer/markdown'
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete'
 import { openSearchPanel, search, searchKeymap } from '@codemirror/search'
+import { CustomSearchPanel } from '@/lib/editor/searchPanel'
 import { baseTheme, markdownHighlightStyle } from '@/lib/editor/theme'
 import {
   toggleInlineMark,
@@ -228,7 +229,10 @@ function makeExtensions(): Extension[] {
     EditorView.lineWrapping,
     scrollPastEnd(),
     closeBrackets(),
-    search({ top: true }),
+    search({
+      top: true,
+      createPanel: (v) => new CustomSearchPanel(v),
+    }),
     customKeymap,
     keymap.of([...searchKeymap, ...closeBracketsKeymap, ...defaultKeymap, ...historyKeymap]),
     modeCompartment.of(modeExtensions(props.mode)),
@@ -312,9 +316,8 @@ onBeforeUnmount(async () => {
       tabsStore.setScrollLine(currentTopLine())
     }
     view.scrollDOM.removeEventListener('scroll', handleEditorScroll)
-    const text = view.state.doc.toString()
-    emit('update:content', text)
-    if (tabsStore.activeTab?.dirty) {
+    if (tabsStore.activeTab?.dirty && !vaultStore.isSwitchingVault) {
+      const text = view.state.doc.toString()
       await saveNote(props.path, text)
     }
     view.destroy()

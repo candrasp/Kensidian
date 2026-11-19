@@ -30,6 +30,7 @@ export const useVaultStore = defineStore('vault', () => {
   const selectedPath = ref<string | null>(null)
   const totalNotes = ref(0)
   const totalFolders = ref(0)
+  const isSwitchingVault = ref(false)
   const requestCreate = ref<{ kind: 'file' | 'folder'; folder?: string; id: number } | null>(null)
   let unlistenVaultChanged: (() => void) | null = null
 
@@ -130,11 +131,53 @@ export const useVaultStore = defineStore('vault', () => {
     })
   }
 
+  let onSwitchHandlers: {
+    before?: () => Promise<void>
+    after?: () => Promise<void>
+  } = {}
+
+  function registerSwitchHandlers(handlers: {
+    before?: () => Promise<void>
+    after?: () => Promise<void>
+  }) {
+    onSwitchHandlers = handlers
+  }
+
+  function resetVaultState() {
+    tree.value = new Map()
+    expanded.value = new Set()
+    totalNotes.value = 0
+    totalFolders.value = 0
+    selectedPath.value = null
+    treeVersion.value++
+  }
+
   async function openVault(path: string) {
-    current.value = await ipc.vaultOpen(path)
-    recentVaults.value = await ipc.vaultListRecent()
-    tree.value = new Map(); expanded.value = new Set(); treeVersion.value++
-    await loadConfig(); await loadDir(''); await updateNotesCount(); await setupListener()
+    if (onSwitchHandlers.before) {
+      await onSwitchHandlers.before()
+    }
+    isSwitchingVault.value = true
+    unlistenVaultChanged?.()
+    unlistenVaultChanged = null
+    try {
+      const info = await ipc.vaultOpen(path)
+      current.value = info
+      recentVaults.value = await ipc.vaultListRecent()
+      resetVaultState()
+      await loadConfig()
+      await loadDir('')
+      await updateNotesCount()
+      await setupListener()
+      if (onSwitchHandlers.after) {
+        await onSwitchHandlers.after()
+      }
+    } catch (e) {
+      console.error('Gagal membuka vault:', e)
+    } finally {
+      setTimeout(() => {
+        isSwitchingVault.value = false
+      }, 250)
+    }
   }
 
   async function closeVault() {
@@ -288,6 +331,8 @@ export const useVaultStore = defineStore('vault', () => {
     revealPath,
     openVault,
     closeVault,
+    registerSwitchHandlers,
+    isSwitchingVault,
     requestCreate,
     triggerCreate,
   }

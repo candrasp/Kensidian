@@ -39,6 +39,7 @@ export const t = {
   createVault: 'Buat vault baru…',
   welcomeSubtitle: 'Aplikasi catatan Markdown ringan',
   welcomeRecentTitle: 'Vault terbaru',
+  loadingVault: 'Memuat vault...',
   watchingActive: 'Memantau perubahan file',
   watchingInactive: 'Pemantau file tidak aktif',
   minimize: 'Perkecil',

@@ -19,6 +19,7 @@ import EditorContextMenu from '@/components/editor/EditorContextMenu.vue'
 import NewTabPage from './NewTabPage.vue'
 import ModalHost from '@/components/modal/ModalHost.vue'
 import ToastHost from '@/components/ui/ToastHost.vue'
+import VaultLoadingOverlay from './VaultLoadingOverlay.vue'
 import { useToastStore } from '@/stores/toast'
 import { t } from '@/lib/i18n/id'
 
@@ -137,12 +138,13 @@ watch(
 
       <RightSidebar
         v-if="uiStore.rightSidebarVisible"
-        :content="tabsStore.activeContent"
+        :content="tabsStore.activePath ? tabsStore.activeContent : ''"
         @select-heading="handleScrollToHeading"
       />
     </div>
 
     <ModalHost />
     <ToastHost />
+    <VaultLoadingOverlay :visible="vaultStore.isSwitchingVault" :vault-name="vaultStore.current?.name" />
   </div>
 </template>
