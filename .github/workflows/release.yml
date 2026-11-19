@@ -37,10 +37,11 @@ jobs:
         run: bun install
 
       - name: Extract Changelog
+        id: changelog
         shell: pwsh
         run: |
           $version = $env:GITHUB_REF_NAME -replace '^v', ''
-          $lines = Get-Content CHANGELOG.md
+          $lines = Get-Content CHANGELOG.md -Encoding UTF8
           $capture = $false
           $result = @()
 
@@ -61,7 +62,11 @@ jobs:
             $result = @("Pembaruan Kensidian versi $version")
           }
 
-          $result | Set-Content RELEASE_NOTES.md -Encoding UTF8
+          $content = ($result -join "`n").Trim()
+          $delimiter = "EOF_" + [guid]::NewGuid().ToString("N")
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "notes<<$delimiter" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_OUTPUT -Value $content -Encoding UTF8
+          Add-Content -Path $env:GITHUB_OUTPUT -Value $delimiter -Encoding UTF8
 
       - name: Build & Release Tauri App
         uses: tauri-apps/tauri-action@v0
@@ -72,8 +77,7 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: "Kensidian v__VERSION__"
-          releaseBodyFile: RELEASE_NOTES.md
-          releaseNotesFile: RELEASE_NOTES.md
+          releaseBody: ${{ steps.changelog.outputs.notes }}
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
