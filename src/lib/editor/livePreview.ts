@@ -28,6 +28,21 @@ class BulletWidget extends WidgetType {
   }
 }
 
+class NumberedListWidget extends WidgetType {
+  constructor(readonly num: number) {
+    super()
+  }
+  eq(other: NumberedListWidget) {
+    return this.num === other.num
+  }
+  toDOM() {
+    const span = document.createElement('span')
+    span.textContent = `${this.num}.`
+    span.className = 'cm-lp-ol-num'
+    return span
+  }
+}
+
 class HRWidget extends WidgetType {
   eq() {
     return true
@@ -187,12 +202,13 @@ function build(view: EditorView, opts: { revealOnCursor: boolean }) {
           out.push(Decoration.line({ class: `cm-lp-list-item ${kindCls} cm-lp-list-${depth}` }).range(line.from))
         }
 
-        // Bullet list
+        // Bullet list & Ordered list
         if (name === 'ListMark') {
           const text = state.sliceDoc(ref.from, ref.to)
+          const parentName = ref.node.parent?.parent?.name
           if (
             ['-', '*', '+'].includes(text) &&
-            ref.node.parent?.parent?.name === 'BulletList'
+            parentName === 'BulletList'
           ) {
             const line = state.doc.lineAt(ref.from)
             const isTask = /^\s*[-*+]\s+\[[ xX\/\->i?!]\]/.test(line.text)
@@ -204,6 +220,23 @@ function build(view: EditorView, opts: { revealOnCursor: boolean }) {
               } else {
                 hide(ref.from, end, new BulletWidget())
               }
+            }
+          } else if (/^\d+[.)]$/.test(text) && parentName === 'OrderedList') {
+            const line = state.doc.lineAt(ref.from)
+            let end = ref.to
+            if (state.sliceDoc(end, end + 1) === ' ') end++
+            if (!revealed(line.from, line.to)) {
+              let itemIndex = 1
+              const parentList = ref.node.parent?.parent
+              if (parentList) {
+                for (let c = parentList.firstChild; c; c = c.nextSibling) {
+                  if (c.name === 'ListItem') {
+                    if (c.from === ref.node.parent?.from) break
+                    itemIndex++
+                  }
+                }
+              }
+              hide(ref.from, end, new NumberedListWidget(itemIndex))
             }
           }
           return

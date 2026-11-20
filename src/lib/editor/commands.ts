@@ -56,6 +56,51 @@ export function toggleInlineMark(view: EditorView, marker: string) {
   view.focus()
 }
 
+export function toggleOrderedList(view: EditorView) {
+  const { state } = view
+  const range = state.selection.main
+  const startLine = state.doc.lineAt(range.from)
+  const endLine = state.doc.lineAt(range.to)
+
+  let allNumbered = true
+  let pos = startLine.from
+  while (pos <= endLine.from) {
+    const line = state.doc.lineAt(pos)
+    if (!/^\s*\d+\.\s+/.test(line.text)) {
+      allNumbered = false
+      break
+    }
+    pos = line.to + 1
+  }
+
+  const changes = []
+  pos = startLine.from
+  let index = 1
+  while (pos <= endLine.from) {
+    const line = state.doc.lineAt(pos)
+    if (allNumbered) {
+      const match = line.text.match(/^(\s*)\d+\.\s+/)
+      if (match) {
+        changes.push({ from: line.from, to: line.from + match[0].length, insert: match[1] })
+      }
+    } else {
+      const match = line.text.match(/^(\s*)(?:[-*]|\d+\.)\s+/)
+      if (match) {
+        changes.push({ from: line.from, to: line.from + match[0].length, insert: `${match[1]}${index}. ` })
+      } else {
+        const indentMatch = line.text.match(/^(\s*)/)
+        const indent = indentMatch ? indentMatch[1] : ''
+        changes.push({ from: line.from + indent.length, to: line.from + indent.length, insert: `${index}. ` })
+      }
+      index++
+    }
+    pos = line.to + 1
+  }
+
+  view.dispatch({ changes, scrollIntoView: true })
+  view.focus()
+}
+
 export function toggleLinePrefix(view: EditorView, prefix: string) {
   const { state } = view
   const range = state.selection.main

@@ -292,6 +292,13 @@ export const baseTheme = EditorView.theme({
     width: '0.75em',
     textAlign: 'center',
   },
+  '.cm-lp-ol-num': {
+    color: 'var(--fg-muted)',
+    display: 'inline-block',
+    minWidth: '1.25em',
+    textAlign: 'right',
+    marginRight: '0.25em',
+  },
   '.cm-lp-list-item': {
     paddingTop: '3px',
     paddingBottom: '3px',
@@ -478,6 +485,28 @@ export const baseTheme = EditorView.theme({
     opacity: '1',
     background: 'var(--bg-hover)',
     color: 'var(--text-fg)',
+  },
+  '.cm-lp-table-md-btn': {
+    marginLeft: '6px',
+    color: 'var(--fg)',
+    opacity: '0.8',
+  },
+  '.cm-lp-table-md-btn:hover': {
+    opacity: '1 !important',
+    background: 'var(--bg-hover)',
+    color: 'var(--accent) !important',
+    borderColor: 'var(--accent)',
+  },
+  '.cm-lp-table-del-table-btn': {
+    marginLeft: '6px',
+    color: 'var(--fg)',
+    opacity: '0.8',
+  },
+  '.cm-lp-table-del-table-btn:hover': {
+    opacity: '1 !important',
+    background: 'rgba(239, 68, 68, 0.15)',
+    color: '#ef4444 !important',
+    borderColor: 'rgba(239, 68, 68, 0.4)',
   },
   '.cm-lp-table-header-cell': {
     position: 'relative',

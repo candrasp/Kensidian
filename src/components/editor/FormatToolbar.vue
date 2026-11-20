@@ -10,7 +10,7 @@ import {
 } from 'reka-ui'
 import IconButton from '@/components/ui/IconButton.vue'
 import {
-  applyUndo, applyRedo, setHeading, toggleInlineMark, toggleLinePrefix,
+  applyUndo, applyRedo, setHeading, toggleInlineMark, toggleLinePrefix, toggleOrderedList,
   insertLink, insertCodeBlock, insertTable, insertHorizontalRule, insertImageFromDisk,
 } from '@/lib/editor/commands'
 import { toggleTask, setTaskStatus, TASK_STATUSES, HEADINGS } from '@/lib/editor/checkboxWidget'
@@ -82,7 +82,7 @@ const handleTask = (c: string, e?: Event) => {
     <div class="flex items-center gap-0.5">
       <IconButton :icon="Quote" label="Kutipan (>)" :disabled="!view" @click="run((v) => toggleLinePrefix(v, '> '))" />
       <IconButton :icon="List" label="Daftar Bullet (-)" :disabled="!view" @click="run((v) => toggleLinePrefix(v, '- '))" />
-      <IconButton :icon="ListOrdered" label="Daftar Nomor (1.)" :disabled="!view" @click="run((v) => toggleLinePrefix(v, '1. '))" />
+      <IconButton :icon="ListOrdered" label="Daftar Nomor (1.)" :disabled="!view" @click="run(toggleOrderedList)" />
 
       <div class="flex items-center">
         <IconButton :icon="SquareCheck" label="Kotak Centang (- [ ])" :disabled="!view" @click="run(toggleTask)" />

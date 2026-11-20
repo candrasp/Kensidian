@@ -39,15 +39,33 @@ export function serializeMarkdownTable(data: ParsedTable): string {
   return [headStr, sepStr, ...rowStrs].join('\n')
 }
 
-function makeActionBtn(text: string, title: string, cls: string, onClick: () => void): HTMLElement {
+function makeActionBtn(text: string, cls: string, onClick: () => void): HTMLElement {
   const btn = document.createElement('button')
   btn.className = cls
   btn.textContent = text
-  btn.title = title
   btn.contentEditable = 'false'
   btn.tabIndex = -1
   btn.addEventListener('mousedown', (e) => { e.preventDefault(); onClick() })
   return btn
+}
+
+function selectCellText(cell: HTMLElement) {
+  const selection = window.getSelection()
+  if (!selection) return
+  const range = document.createRange()
+  const firstChild = cell.firstChild
+  if (firstChild && firstChild.nodeType === Node.TEXT_NODE) {
+    range.selectNodeContents(firstChild)
+  } else {
+    range.selectNodeContents(cell)
+  }
+  selection.removeAllRanges()
+  selection.addRange(range)
+}
+
+function focusCell(cell: HTMLElement) {
+  cell.focus()
+  selectCellText(cell)
 }
 
 export function attachTableEditor(
@@ -93,13 +111,26 @@ export function attachTableEditor(
     current.rows.forEach((r) => r.splice(col, 1))
     dirty = true; sync()
   }
+  const deleteTable = () => {
+    const range = getRange()
+    if (!range) return
+    view.dispatch({ changes: { from: range.from, to: range.to, insert: '' }, scrollIntoView: true })
+    view.focus()
+  }
+
+  const showMarkdown = () => {
+    const range = getRange()
+    if (!range) return
+    view.dispatch({ selection: { anchor: range.from, head: range.to }, scrollIntoView: true })
+    view.focus()
+  }
 
   // Header cells
   tableEl.querySelectorAll('th').forEach((th, colIdx) => {
     registerCell(th, (v) => { if (current.headers[colIdx] !== v) { current.headers[colIdx] = v; dirty = true } })
     if (current.headers.length > 1) {
       th.classList.add('cm-lp-table-header-cell')
-      th.appendChild(makeActionBtn('×', 'Hapus kolom', 'cm-lp-table-del-col-btn', () => removeColumn(colIdx)))
+      th.appendChild(makeActionBtn('×', 'cm-lp-table-del-col-btn', () => removeColumn(colIdx)))
     }
   })
 
@@ -114,7 +145,7 @@ export function attachTableEditor(
     const delTd = document.createElement('td')
     delTd.className = 'cm-lp-table-action-col'
     if (current.rows.length > 1) {
-      delTd.appendChild(makeActionBtn('×', 'Hapus baris', 'cm-lp-table-del-btn', () => removeRow(rowIdx)))
+      delTd.appendChild(makeActionBtn('×', 'cm-lp-table-del-btn', () => removeRow(rowIdx)))
     }
     tr.appendChild(delTd)
   })
@@ -122,38 +153,67 @@ export function attachTableEditor(
   // "+ Kolom" button in thead
   const thRow = tableEl.querySelector('thead tr')
   if (thRow) {
-    const addColTh = document.createElement('th')
-    addColTh.className = 'cm-lp-table-action-col'
-    addColTh.appendChild(makeActionBtn('+', 'Tambah kolom', 'cm-lp-table-action-btn', addColumn))
-    thRow.appendChild(addColTh)
+    const actionTh = document.createElement('th')
+    actionTh.className = 'cm-lp-table-action-col'
+    actionTh.appendChild(makeActionBtn('+', 'cm-lp-table-action-btn', addColumn))
+    thRow.appendChild(actionTh)
   }
 
-  // "+ Baris" button row in tfoot
+  // "+ Baris", "Show Markdown" & "Hapus tabel" in tfoot
   const tfoot = tableEl.createTFoot()
   const addRowTr = tfoot.insertRow()
   const addRowTd = addRowTr.insertCell()
   addRowTd.colSpan = current.headers.length + 1
   addRowTd.className = 'cm-lp-table-action-row'
-  addRowTd.appendChild(makeActionBtn('+ Baris', 'Tambah baris', 'cm-lp-table-action-btn', addRow))
+  addRowTd.appendChild(makeActionBtn('+ Baris', 'cm-lp-table-action-btn', addRow))
+  addRowTd.appendChild(makeActionBtn('Show Markdown', 'cm-lp-table-action-btn cm-lp-table-md-btn', showMarkdown))
+  addRowTd.appendChild(makeActionBtn('Hapus tabel', 'cm-lp-table-action-btn cm-lp-table-del-table-btn', deleteTable))
 
   // Keyboard navigation
   tableEl.addEventListener('keydown', (e: KeyboardEvent) => {
     const target = (e.target as HTMLElement).closest('th, td') as HTMLElement | null
     if (!target) return
+    const colCount = current.headers.length
+    const idx = allCells.indexOf(target)
+    if (idx === -1) return
+
     if (e.key === 'Tab') {
       e.preventDefault()
-      const idx = allCells.indexOf(target)
-      if (idx === -1) return
       const nextIdx = e.shiftKey ? idx - 1 : idx + 1
       if (nextIdx >= 0 && nextIdx < allCells.length) {
-        allCells[nextIdx].focus()
+        focusCell(allCells[nextIdx])
       } else if (!e.shiftKey && nextIdx >= allCells.length) {
         addRow()
         target.blur()
       }
     } else if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      target.blur()
+      const nextDown = idx + colCount
+      if (nextDown < allCells.length) {
+        focusCell(allCells[nextDown])
+      } else {
+        addRow()
+        target.blur()
+      }
+    } else if (e.key === 'ArrowDown') {
+      const nextDown = idx + colCount
+      if (nextDown < allCells.length) {
+        e.preventDefault()
+        focusCell(allCells[nextDown])
+      }
+    } else if (e.key === 'ArrowUp') {
+      const prevUp = idx - colCount
+      if (prevUp >= 0) {
+        e.preventDefault()
+        focusCell(allCells[prevUp])
+      }
+    } else if (e.key === 'a' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault()
+      const range = getRange()
+      if (range) {
+        view.dispatch({ selection: { anchor: range.from, head: range.to }, scrollIntoView: true })
+        view.focus()
+      }
     }
   })
 }

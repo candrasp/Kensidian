@@ -212,6 +212,40 @@ function makeExtensions(): Extension[] {
         return false
       },
     },
+    {
+      key: 'Tab',
+      run: (v) => {
+        const line = v.state.doc.lineAt(v.state.selection.main.head)
+        const match = line.text.match(/^(\s*)([-*]|\d+\.)\s+/)
+        if (match) {
+          const indent = '  '
+          v.dispatch({
+            changes: { from: line.from, to: line.from, insert: indent },
+            selection: { anchor: v.state.selection.main.anchor + indent.length, head: v.state.selection.main.head + indent.length },
+            scrollIntoView: true,
+          })
+          return true
+        }
+        return false
+      },
+      shift: (v) => {
+        const line = v.state.doc.lineAt(v.state.selection.main.head)
+        const match = line.text.match(/^(\s+)([-*]|\d+\.)\s+/)
+        if (match) {
+          const removeLen = match[1].length >= 2 ? 2 : match[1].length
+          v.dispatch({
+            changes: { from: line.from, to: line.from + removeLen, insert: '' },
+            selection: {
+              anchor: Math.max(line.from, v.state.selection.main.anchor - removeLen),
+              head: Math.max(line.from, v.state.selection.main.head - removeLen),
+            },
+            scrollIntoView: true,
+          })
+          return true
+        }
+        return false
+      },
+    },
   ])
 
   return [

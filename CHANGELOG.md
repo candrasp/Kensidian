@@ -2,6 +2,18 @@
 
 Semua perubahan penting pada aplikasi Kensidian akan dicatat di file ini.
 
+## [1.2.3] - 2026-11-20
+### Diperbaiki
+- **Urutan Angka Otomatis pada Daftar Nomor (Ordered List):**
+  - Memperbaiki rendering Live Preview untuk daftar bernomor (`1.`, `1.`, `1.`) agar otomatis dihitung dan ditampilkan berurutan secara visual (`1.`, `2.`, `3.`, dst.) sesuai spesifikasi CommonMark dan standar Obsidian.
+  - Memperbaiki tombol toolbar "Daftar Nomor (1.)" (`toggleOrderedList`) sehingga ketika beberapa baris dipilih dan tombol diklik, penomoran otomatis diurutkan secara berurutan (`1. `, `2. `, `3. `, dst.) dengan mempertahankan indentasi asli, serta dapat di-toggle untuk menghapus nomor.
+- **Interaksi & Manajemen Tabel di Live Preview:**
+  - Menambahkan tombol aksi **Hapus tabel** pada footer tabel yang memungkinkan pengguna menghapus seluruh blok tabel dari dokumen dengan satu klik.
+  - Menambahkan tombol **Show Markdown** di sebelah tombol aksi tabel untuk menampilkan dan menyeleksi sintaks markdown mentah tabel secara langsung tanpa flicker layout.
+  - Menghapus transisi otomatis ke markdown mentah saat mengklik di luar area tabel, menjaga tampilan tabel visual tetap stabil saat berinteraksi dengan catatan.
+  - Menghapus tooltip native/floating pada tombol tabel guna mencegah bug glitch tooltip yang mengambang di layar.
+  - Mendukung shortcut seleksi seluruh tabel (`Ctrl+A` / `Cmd+A` saat sel tabel aktif) dan seleksi lintas tabel di editor, sehingga tabel dapat langsung dihapus menggunakan tombol `Backspace` atau `Delete`.
+
 ## [1.2.2] - 2026-11-20
 ### Diperbaiki
 - **Optimasi Buka Vault & Overlay Transisi:** Memperbaiki freeze UI dan delay responsif saat beralih atau membuka vault dengan menambahkan overlay transisi (`VaultLoadingOverlay`), memindahkan parsing konfigurasi workspace setelah event load selesai, serta menunda pembacaan riwayat vault agar pembukaan berkas terasa instan.

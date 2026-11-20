@@ -277,7 +277,7 @@ class TableWidget extends WidgetType {
 
     wrap.addEventListener('mousedown', (ev) => {
       const target = ev.target as HTMLElement
-      if (target.closest('th, td, input, textarea')) return
+      if (target.closest('th, td, input, textarea, button')) return
       const swatch = target.closest('.color-swatch') as HTMLElement | null
       if (swatch?.dataset.color) {
         ev.preventDefault()
@@ -290,10 +290,6 @@ class TableWidget extends WidgetType {
         return
       }
       if (target.closest('a')) return
-      if (!this.clickable) return
-      ev.preventDefault()
-      view.dispatch({ selection: { anchor: view.posAtDOM(wrap) } })
-      view.focus()
     })
     wrap.addEventListener('click', (ev) => {
       const link = (ev.target as HTMLElement).closest('a') as HTMLAnchorElement | null
@@ -473,19 +469,21 @@ function build(state: EditorState, opts: Opts): DecorationSet {
       }
 
       if (ref.name === 'Table') {
-        const depth = getListItemDepth(ref.node, state)
-        out.push(
-          Decoration.replace({
-            widget: new TableWidget(
-              state.sliceDoc(ref.from, ref.to),
-              opts.revealOnCursor,
-              depth,
-              ref.from,
-              ref.to,
-            ),
-            block: true,
-          }).range(ref.from, ref.to),
-        )
+        if (!touches(ref.from, ref.to)) {
+          const depth = getListItemDepth(ref.node, state)
+          out.push(
+            Decoration.replace({
+              widget: new TableWidget(
+                state.sliceDoc(ref.from, ref.to),
+                opts.revealOnCursor,
+                depth,
+                ref.from,
+                ref.to,
+              ),
+              block: true,
+            }).range(ref.from, ref.to),
+          )
+        }
         return false
       }
     },
