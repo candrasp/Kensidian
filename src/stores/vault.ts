@@ -186,6 +186,14 @@ export const useVaultStore = defineStore('vault', () => {
     current.value = null; tree.value = new Map(); expanded.value = new Set(); totalNotes.value = 0; totalFolders.value = 0; treeVersion.value++
   }
 
+  async function removeRecentVault(path: string) {
+    try {
+      recentVaults.value = await ipc.vaultRemoveRecent(path)
+    } catch (e) {
+      console.error('Gagal menghapus vault dari riwayat:', e)
+    }
+  }
+
   const collapseAll = () => { expanded.value = new Set() }
   const setSortOrder = (order: SortOrder) => { sortOrder.value = order }
   const toggleAutoReveal = () => { autoReveal.value = !autoReveal.value }
@@ -331,6 +339,7 @@ export const useVaultStore = defineStore('vault', () => {
     revealPath,
     openVault,
     closeVault,
+    removeRecentVault,
     registerSwitchHandlers,
     isSwitchingVault,
     requestCreate,

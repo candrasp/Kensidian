@@ -40,6 +40,7 @@ pub fn run() {
             settings_load,
             settings_save,
             vault_list_recent,
+            vault_remove_recent,
             vault_get_current,
             vault_open,
             vault_create,

@@ -18,6 +18,7 @@ const delay = (ms = 40) => new Promise((resolve) => setTimeout(resolve, ms))
 
 let mockSettings: Settings | null = null
 let currentVault: VaultInfo | null = { path: '/mock/vault', name: 'Catatan Mock' }
+let mockRecentVaults: VaultInfo[] = [{ path: '/mock/vault', name: 'Catatan Mock' }]
 const mockFiles = new Map<string, string>([
   ['Catatan Awal.md', '# Selamat Datang di Kensidian\n\nIni adalah catatan contoh [[Referensi]].'],
   ['Referensi.md', '# Referensi\n\nTautan kembali ke [[Catatan Awal]].\n- [ ] Daftar tugas\n- [x] Selesai'],
@@ -37,7 +38,12 @@ export const mockIpc = {
   },
   vaultListRecent: async (): Promise<VaultInfo[]> => {
     await delay()
-    return [{ path: '/mock/vault', name: 'Catatan Mock' }]
+    return [...mockRecentVaults]
+  },
+  vaultRemoveRecent: async (path: string): Promise<VaultInfo[]> => {
+    await delay()
+    mockRecentVaults = mockRecentVaults.filter((v) => v.path !== path)
+    return [...mockRecentVaults]
   },
   vaultGetCurrent: async (): Promise<VaultInfo | null> => {
     await delay()

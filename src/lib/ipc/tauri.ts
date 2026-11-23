@@ -19,6 +19,7 @@ export const tauriIpc = {
   settingsLoad: () => invoke<Settings | null>('settings_load'),
   settingsSave: (settings: Settings) => invoke<void>('settings_save', { settings }),
   vaultListRecent: () => invoke<VaultInfo[]>('vault_list_recent'),
+  vaultRemoveRecent: (path: string) => invoke<VaultInfo[]>('vault_remove_recent', { path }),
   vaultGetCurrent: () => invoke<VaultInfo | null>('vault_get_current'),
   vaultOpen: (path: string) => invoke<VaultInfo>('vault_open', { path }),
   vaultCreate: (parentPath: string, name: string) => invoke<VaultInfo>('vault_create', { parentPath, name }),

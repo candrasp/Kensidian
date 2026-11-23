@@ -132,4 +132,9 @@ export const t = {
   caseSensitive: 'Case sensitive',
   useRegex: 'Gunakan regex',
   searchPlaceholder: 'Ketik untuk mencari...',
+  removeFromRecent: 'Hapus dari daftar riwayat (file di disk tetap aman)',
+  removeRecentVaultTitle: 'Hapus dari Riwayat',
+  removeRecentVaultDesc: (name: string) => `Apakah Anda yakin ingin menghapus "${name}" dari daftar riwayat?`,
+  removeRecentVaultWarning: 'Folder dan berkas catatan di komputer Anda tidak akan dihapus, hanya sesi riwayat yang dibersihkan.',
+  removeRecentVaultAction: 'Hapus dari Riwayat',
 } as const

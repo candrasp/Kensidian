@@ -2,6 +2,15 @@
 
 Semua perubahan penting pada aplikasi Kensidian akan dicatat di file ini.
 
+## [1.2.4] - 2026-11-23
+### Ditambahkan
+- **Fitur Hapus Vault dari Riwayat Sesi (Remove from Recent):**
+  - Menambahkan opsi untuk menghapus entri vault dari daftar riwayat (*recent vaults*) tanpa menghapus folder fisik maupun berkas catatan di disk.
+  - Menambahkan command IPC backend Rust `vault_remove_recent` dengan penyimpanan atomik (`atomic_write`) dan normalisasi separator path Windows yang konsisten.
+  - Menambahkan modal konfirmasi dialog (`RemoveRecentModal.vue`) yang informatif dan aman, menegaskan bahwa berkas catatan di komputer pengguna tetap aman dan hanya referensi sesi riwayat yang dibersihkan.
+  - Menyediakan tombol aksi hapus (ikon `X`) yang muncul saat baris di-hover pada dropdown pemilih vault di footer sidebar (`SidebarFooter.vue`) dan pada layar awal (`WelcomeScreen.vue`).
+  - Memisahkan elemen tombol buka vault dan tombol hapus riwayat secara fisik untuk mencegah konflik event bubbling yang dapat memicu pembukaan vault saat menghapus sesi.
+
 ## [1.2.3] - 2026-11-20
 ### Diperbaiki
 - **Urutan Angka Otomatis pada Daftar Nomor (Ordered List):**

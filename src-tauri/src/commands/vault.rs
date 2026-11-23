@@ -15,7 +15,7 @@ fn normalize_path_str(raw: &str) -> String {
     canonical
         .to_string_lossy()
         .trim_start_matches(r"\\?\")
-        .to_string()
+        .replace('/', "\\")
 }
 
 fn update_recent_vaults(app_state: &AppState, info: &VaultInfo) -> Result<(), AppError> {
@@ -233,5 +233,40 @@ pub async fn vault_list_recent(state: State<'_, AppState>) -> Result<Vec<VaultIn
             });
         }
     }
+    Ok(list)
+}
+
+#[tauri::command]
+pub async fn vault_remove_recent(
+    state: State<'_, AppState>,
+    path: String,
+) -> Result<Vec<VaultInfo>, IpcError> {
+    let recent_path = state.dirs.recent_file();
+    if !recent_path.exists() {
+        return Ok(Vec::new());
+    }
+
+    let content = fs::read_to_string(&recent_path).map_err(AppError::from)?;
+    let raw_list: Vec<VaultInfo> = serde_json::from_str(&content).unwrap_or_default();
+    let target_norm = normalize_path_str(&path);
+
+    let mut list: Vec<VaultInfo> = Vec::new();
+    for item in raw_list {
+        let norm = normalize_path_str(&item.path);
+        if !norm.eq_ignore_ascii_case(&target_norm)
+            && !list.iter().any(|v| v.path.eq_ignore_ascii_case(&norm))
+        {
+            let p = PathBuf::from(&norm);
+            if p.exists() && p.is_dir() {
+                list.push(VaultInfo {
+                    path: norm,
+                    name: item.name,
+                });
+            }
+        }
+    }
+
+    let json = serde_json::to_string_pretty(&list).map_err(AppError::from)?;
+    crate::storage::atomic::atomic_write(&recent_path, json.as_bytes()).map_err(AppError::from)?;
     Ok(list)
 }
