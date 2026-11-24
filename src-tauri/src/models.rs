@@ -5,6 +5,29 @@ use serde::{Deserialize, Serialize};
 pub struct VaultInfo {
     pub path: String,
     pub name: String,
+    #[serde(default)]
+    pub is_project: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GitCommitInfo {
+    pub hash: String,
+    pub message: String,
+    pub author: String,
+    pub timestamp: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GitStatus {
+    pub is_git: bool,
+    pub branch: String,
+    pub uncommitted_count: usize,
+    pub uncommitted_files: Vec<String>,
+    pub last_commit: Option<GitCommitInfo>,
+    pub ahead: usize,
+    pub behind: usize,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

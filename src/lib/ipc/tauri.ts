@@ -11,6 +11,7 @@ import type {
   SyncConfig,
   SyncConfigInput,
   SyncStatus,
+  GitStatus,
 } from './types'
 import { invoke } from '@tauri-apps/api/core'
 import type { Settings } from '@/stores/settings'
@@ -43,6 +44,8 @@ export const tauriIpc = {
     invoke<string>('fs_write_asset', { fileName, data: Array.from(data) }),
   searchInVault: (query: string, useRegex: boolean, caseSensitive: boolean) =>
     invoke<SearchHit[]>('search_in_vault', { query, useRegex, caseSensitive }),
+  projectGetGitStatus: () => invoke<GitStatus>('project_get_git_status'),
+  projectOpenTerminal: () => invoke<void>('project_open_terminal'),
   backlinksGet: (path: string) => invoke<BacklinkRef[]>('backlinks_get', { path }),
   backlinksCount: (path: string) => invoke<number>('backlinks_count', { path }),
   syncConfigLoad: () => invoke<SyncConfig>('sync_config_load'),

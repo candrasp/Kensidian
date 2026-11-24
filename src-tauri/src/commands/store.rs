@@ -1,3 +1,4 @@
+use crate::constants::MAX_JSON_BYTES;
 use crate::error::{AppError, IpcError};
 use crate::models::{ItemStyle, VaultConfig};
 use crate::state::AppState;
@@ -12,6 +13,10 @@ pub async fn settings_load(
     let settings_path = state.dirs.settings_file();
     if !settings_path.exists() {
         return Ok(None);
+    }
+    let metadata = fs::metadata(&settings_path).map_err(AppError::from)?;
+    if metadata.len() > MAX_JSON_BYTES {
+        return Err(AppError::TooLarge("settings file exceeds maximum size".into()).into());
     }
     let content = fs::read_to_string(&settings_path).map_err(AppError::from)?;
     let val: serde_json::Value = serde_json::from_str(&content).map_err(AppError::from)?;
@@ -38,6 +43,10 @@ pub async fn workspace_load(
     if !ws_path.exists() {
         return Ok(None);
     }
+    let metadata = fs::metadata(&ws_path).map_err(AppError::from)?;
+    if metadata.len() > MAX_JSON_BYTES {
+        return Err(AppError::TooLarge("workspace file exceeds maximum size".into()).into());
+    }
     let content = fs::read_to_string(&ws_path).map_err(AppError::from)?;
     let val: serde_json::Value = serde_json::from_str(&content).map_err(AppError::from)?;
     Ok(Some(val))
@@ -62,6 +71,10 @@ pub async fn vault_config_load(state: State<'_, AppState>) -> Result<VaultConfig
     if !cfg_path.exists() {
         return Ok(VaultConfig::default());
     }
+    let metadata = fs::metadata(&cfg_path).map_err(AppError::from)?;
+    if metadata.len() > MAX_JSON_BYTES {
+        return Err(AppError::TooLarge("config file exceeds maximum size".into()).into());
+    }
     let content = fs::read_to_string(&cfg_path).map_err(AppError::from)?;
     let val: VaultConfig = serde_json::from_str(&content).unwrap_or_default();
     Ok(val)
@@ -81,6 +94,10 @@ pub async fn item_style_set(
 
     let cfg_path = session.config_file();
     let mut config: VaultConfig = if cfg_path.exists() {
+        let metadata = fs::metadata(&cfg_path).map_err(AppError::from)?;
+        if metadata.len() > MAX_JSON_BYTES {
+            return Err(AppError::TooLarge("config file exceeds maximum size".into()).into());
+        }
         let content = fs::read_to_string(&cfg_path).map_err(AppError::from)?;
         serde_json::from_str(&content).unwrap_or_default()
     } else {

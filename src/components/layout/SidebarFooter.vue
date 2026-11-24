@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Folder, ChevronsUpDown, CloudUpload, Settings, FolderOpen, FolderPlus, Check, X } from 'lucide-vue-next'
+import { Folder, ChevronsUpDown, CloudUpload, Settings, FolderOpen, FolderPlus, FolderGit2, Check, X } from 'lucide-vue-next'
 import {
   DropdownMenuRoot, DropdownMenuTrigger, DropdownMenuPortal,
   DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
@@ -83,8 +83,10 @@ async function handleConfirmRemove() {
                 class="rounded-sm px-2 py-1.5 hover:bg-hover select-none flex items-center justify-between text-xs text-fg group"
               >
                 <button type="button" class="flex items-center gap-2 flex-1 min-w-0 text-left cursor-pointer outline-none" @click="handleOpenRecent(v.path)">
-                  <Folder class="h-3.5 w-3.5 text-fg-muted shrink-0" :stroke-width="1.75" />
+                  <FolderGit2 v-if="v.isProject" class="h-3.5 w-3.5 text-accent shrink-0" :stroke-width="1.75" />
+                  <Folder v-else class="h-3.5 w-3.5 text-fg-muted shrink-0" :stroke-width="1.75" />
                   <span class="truncate">{{ v.name }}</span>
+                  <span v-if="v.isProject" class="text-[9px] px-1 py-0.2 rounded-xs bg-accent-soft text-accent font-medium">Proyek</span>
                   <Check v-if="v.path === vaultStore.current?.path" class="h-3.5 w-3.5 text-accent shrink-0 ml-auto" :stroke-width="1.75" />
                 </button>
                 <button
@@ -102,6 +104,11 @@ async function handleConfirmRemove() {
             <DropdownMenuItem :class="itemClass" @select="handleOpenVault">
               <FolderOpen class="h-3.5 w-3.5 text-fg-muted shrink-0" :stroke-width="1.75" />
               <span>{{ t.openVaultFolder }}</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem :class="itemClass" @select="handleOpenVault">
+              <FolderGit2 class="h-3.5 w-3.5 text-accent shrink-0" :stroke-width="1.75" />
+              <span>{{ t.openProjectFolder }}</span>
             </DropdownMenuItem>
 
             <DropdownMenuItem :class="itemClass" @select="handleCreateVault">

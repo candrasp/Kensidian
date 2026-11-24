@@ -17,10 +17,12 @@ import EditorPane from '@/components/editor/EditorPane.vue'
 import FormatToolbar from '@/components/editor/FormatToolbar.vue'
 import EditorContextMenu from '@/components/editor/EditorContextMenu.vue'
 import NewTabPage from './NewTabPage.vue'
+import ProjectDashboard from '@/components/project/ProjectDashboard.vue'
 import ModalHost from '@/components/modal/ModalHost.vue'
 import ToastHost from '@/components/ui/ToastHost.vue'
 import VaultLoadingOverlay from './VaultLoadingOverlay.vue'
 import { useToastStore } from '@/stores/toast'
+import { PROJECT_DASHBOARD_PATH } from '@/lib/constants'
 import { t } from '@/lib/i18n/id'
 
 const vaultStore = useVaultStore()
@@ -111,7 +113,8 @@ watch(
         <FormatToolbar v-if="tabsStore.activePath && tabsStore.activeTab?.mode === 'edit'" :view="editorView" />
 
         <div class="relative flex-1 min-h-0">
-          <EditorContextMenu v-if="tabsStore.activePath" :mode="tabsStore.activeTab?.mode ?? 'view'" :view="editorView">
+          <ProjectDashboard v-if="tabsStore.activePath === PROJECT_DASHBOARD_PATH" />
+          <EditorContextMenu v-else-if="tabsStore.activePath" :mode="tabsStore.activeTab?.mode ?? 'view'" :view="editorView">
             <EditorPane
               :content="tabsStore.activeContent"
               :path="tabsStore.activePath"
@@ -124,7 +127,7 @@ watch(
         </div>
 
         <StatusBar
-          :visible="Boolean(tabsStore.activePath)"
+          :visible="Boolean(tabsStore.activePath && tabsStore.activePath !== PROJECT_DASHBOARD_PATH)"
           :char-count="tabsStore.activeContent.length"
           :word-count="tabsStore.activeContent.trim() ? tabsStore.activeContent.trim().split(/\s+/).length : 0"
         />

@@ -10,6 +10,7 @@ import type {
   Workspace,
   SyncConfig,
   SyncStatus,
+  GitStatus,
 } from './types'
 import { IpcException } from './index'
 import type { Settings } from '@/stores/settings'
@@ -239,4 +240,22 @@ export const mockIpc = {
     await delay()
     return 'Catatan baru.md'
   },
+  projectGetGitStatus: async (): Promise<GitStatus> => {
+    await delay()
+    return {
+      isGit: true,
+      branch: 'main',
+      uncommittedCount: 2,
+      uncommittedFiles: ['TODO-PROJEK.md', 'src/components/project/ProjectDashboard.vue'],
+      lastCommit: {
+        hash: 'a1b2c3d',
+        message: 'feat: add initial project mode setup',
+        author: 'Developer',
+        timestamp: Math.floor(Date.now() / 1000) - 3600,
+      },
+      ahead: 1,
+      behind: 0,
+    }
+  },
+  projectOpenTerminal: async (): Promise<void> => {},
 }

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { X } from 'lucide-vue-next'
+import { X, LayoutDashboard } from 'lucide-vue-next'
 import type { TabState } from '@/lib/ipc/types'
+import { PROJECT_DASHBOARD_PATH } from '@/lib/constants'
 import { t } from '@/lib/i18n/id'
 import Tooltip from '@/components/ui/Tooltip.vue'
 
@@ -15,14 +16,17 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
+const isDashboard = computed(() => props.tab.path === PROJECT_DASHBOARD_PATH)
+
 const title = computed(() => {
+  if (isDashboard.value) return 'Dashboard'
   if (!props.tab.path) return t.newTab
   const base = props.tab.path.split('/').pop() || props.tab.path
   return base.replace(/\.md$/, '')
 })
 
 function handleAuxClick(e: MouseEvent) {
-  if (e.button === 1) {
+  if (e.button === 1 && !props.tab.pinned) {
     e.preventDefault()
     emit('close')
   }
@@ -43,9 +47,12 @@ function handleAuxClick(e: MouseEvent) {
       @click="emit('activate')"
       @auxclick="handleAuxClick"
     >
-      <span class="truncate">{{ title }}</span>
+      <div class="flex items-center gap-1.5 min-w-0">
+        <LayoutDashboard v-if="isDashboard" class="h-3.5 w-3.5 text-accent shrink-0" :stroke-width="1.75" />
+        <span class="truncate">{{ title }}</span>
+      </div>
 
-      <div class="flex items-center shrink-0">
+      <div v-if="!tab.pinned" class="flex items-center shrink-0 z-20">
         <span
           v-if="tab.dirty"
           class="h-1.5 w-1.5 rounded-full bg-fg-muted group-hover:hidden"
@@ -54,13 +61,13 @@ function handleAuxClick(e: MouseEvent) {
           type="button"
           :aria-label="t.closeTab"
           :class="[
-            'flex h-4 w-4 items-center justify-center rounded-sm hover:bg-selected hover:text-fg text-fg-muted transition-colors duration-100',
+            'flex h-4 w-4 items-center justify-center rounded-sm hover:bg-selected hover:text-fg text-fg-muted transition-colors duration-100 cursor-pointer',
             active ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
             tab.dirty ? 'hidden group-hover:flex' : '',
           ]"
           @click.stop="emit('close')"
         >
-          <X class="h-3 w-3" :stroke-width="1.75" />
+          <X class="h-3 w-3 pointer-events-none" :stroke-width="1.75" />
         </button>
       </div>
 

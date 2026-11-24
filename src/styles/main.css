@@ -79,10 +79,10 @@
   --fg:            #abb2bf;
   --fg-muted:      #828997;
   --fg-faint:      #5c6370;
-  --accent:        #61afef;
-  --accent-hover:  #4fa1e2;
-  --accent-soft:   rgba(97, 175, 239, 0.16);
-  --accent-fg:     #21252b;
+  --accent:        #2e9e73;
+  --accent-hover:  #258560;
+  --accent-soft:   rgba(46, 158, 115, 0.16);
+  --accent-fg:     #f3f4f6;
   --h1: #61afef;
   --h2: #c678dd;
   --h3: #d19a66;
@@ -336,30 +336,36 @@
   height: 0 !important;
 }
 
-/* Scrollbar auto-hide untuk sidebar: hanya muncul saat di-hover */
-[role="tree"] {
+/* Scrollbar auto-hide untuk sidebar & kartu dashboard: hanya muncul saat di-hover */
+[role="tree"],
+.project-dashboard .overflow-y-auto {
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
   transition: scrollbar-color 0.2s ease;
 }
 
-[role="tree"]:hover {
+[role="tree"]:hover,
+.project-dashboard .overflow-y-auto:hover {
   scrollbar-color: var(--line) transparent;
 }
 
-[role="tree"]::-webkit-scrollbar {
+[role="tree"]::-webkit-scrollbar,
+.project-dashboard .overflow-y-auto::-webkit-scrollbar {
   width: 3px;
 }
 
-[role="tree"]::-webkit-scrollbar-thumb {
+[role="tree"]::-webkit-scrollbar-thumb,
+.project-dashboard .overflow-y-auto::-webkit-scrollbar-thumb {
   background-color: transparent;
   transition: background-color 0.2s ease;
 }
 
-[role="tree"]:hover::-webkit-scrollbar-thumb {
+[role="tree"]:hover::-webkit-scrollbar-thumb,
+.project-dashboard .overflow-y-auto:hover::-webkit-scrollbar-thumb {
   background-color: var(--line);
 }
 
-[role="tree"]:hover::-webkit-scrollbar-thumb:hover {
+[role="tree"]:hover::-webkit-scrollbar-thumb:hover,
+.project-dashboard .overflow-y-auto:hover::-webkit-scrollbar-thumb:hover {
   background-color: var(--line-strong);
 }

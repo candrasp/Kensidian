@@ -2,6 +2,47 @@
 
 Semua perubahan penting pada aplikasi Kensidian akan dicatat di file ini.
 
+## [1.3.0] - 2026-11-24
+### Ditambahkan
+- **Fitur Mode Proyek (Project Tracker untuk Solo Developer):**
+  - **Pembeda Mode Proyek & Filter Direktori:** Menambahkan opsi *"Buka folder proyek..."* pada menu dropdown pemilih vault di footer sidebar (`SidebarFooter.vue`) dan pada layar awal (`WelcomeScreen.vue`), lengkap dengan deteksi otomatis dan penanda badge proyek (`isProject`).
+  - **Smart Ignore Direktori Build & Dependensi:** Backend Rust secara otomatis mengabaikan direktori beban berat seperti `node_modules`, `target`, `dist`, `.git`, `.vscode`, dan folder build lainnya dari penjelajahan pohon berkas dan pengindeksan catatan guna menjaga konsumsi memori tetap ringan dan performa file-watcher tetap optimal.
+  - **Safety Guard Penghapusan Direktori:** Menambahkan proteksi pada command `fs_delete` di backend Rust untuk mencegah penghapusan folder penting kode sumber dan dependensi proyek secara tidak sengaja.
+  - **Integrasi Metadata Git:** Menambahkan command IPC `project_get_git_status` untuk membaca status repositori Git lokal secara cepat (nama branch aktif, commit terakhir berserta hash, pesan, author, dan timestamp, serta deteksi berkas belum ter-commit / uncommitted changes).
+  - **Antarmuka Dashboard Proyek:** Menyediakan komponen dashboard modular (`ProjectDashboard.vue`, `GitStatusCard.vue`, `RoadmapCard.vue`, `SessionNoteCard.vue`, dan `DevlogModal.vue`) yang memungkinkan developer memantau progres checklist roadmap/TODO markdown dan mencatat log sesi koding (*Where I Left Off*) langsung ke berkas markdown.
+
+### Diperbaiki
+- **Penanganan Pemotongan UTF-8 pada Pencarian Dokumen (BUG-01 & BUG-10):**
+  - Memperbaiki potensi *panic* runtime Rust saat pembuatan snippet hasil pencarian catatan di `search.rs` dengan memanfaatkan fungsi snap batas karakter (`floor_char_boundary` dan `ceil_char_boundary`) sebelum pemotongan string byte, sehingga karakter multi-byte (emoji, aksara Asia/non-Latin) tidak lagi menyebabkan crash aplikasi.
+  - Menyelaraskan penghitungan panjang byte pencarian berbasis query lowercase agar pencarian teks multi-byte tidak melompat melebihi batas string.
+- **Pelepasan Blocking Async pada Operasi Tulis Berkas (BUG-02):**
+  - Menghapus pemanggilan `thread::sleep` sinkron di dalam fungsi `atomic_write` (`atomic.rs`) yang sebelumnya berisiko menyebabkan freeze antarmuka sementara (starvation worker thread async Tokio).
+- **Pembersihan File Watcher saat Ganti/Tutup Vault (BUG-03):**
+  - Menambahkan penghentian dan pelepasan listener watcher lama secara eksplisit (`*watcher = None`) saat menutup vault (`vault_close`) atau membuka vault baru (`vault_open`), mencegah kebocoran resource memori dan duplikasi pengiriman event `vault:changed`.
+- **Perbaikan Command Penyimpanan Aset Biner (BUG-04):**
+  - Menulis ulang fungsi `fs_write_asset` di `fs.rs` agar dapat menerima seluruh jenis berkas biner (gambar PNG, JPG, GIF, WebP, dll.) dan menyimpannya ke folder `.kensidian/assets` dengan penomoran unik otomatis dan penguncian tulis (`write_lock`), menggantikan logika duplikat sebelumnya yang keliru membatasi hanya berkas Markdown/teks.
+- **Konsistensi Resolusi Timestamp Catatan (BUG-05):**
+  - Menambahkan fallback `now_millis()` pada `note_write` ketika filesystem memiliki granularitas mtime kasar (seperti FAT32 atau NTFS) agar frontend tidak salah mendeteksi konflik perubahan (*false conflict*) pada penyimpanan berurutan dalam durasi singkat.
+- **Mitigasi Race Condition TOCTOU pada Operasi Berkas (BUG-06):**
+  - Memperbaiki pengecekan keberadaan berkas/folder pada `fs_create_folder` dan `fs_rename` dengan mengandalkan respons error langsung dari sistem operasi untuk mencegah tabrakan konkurensi (TOCTOU).
+- **Parsing Output Status Git yang Lebih Andal (BUG-07 & BUG-16):**
+  - Mengubah pemanggilan Git status di `project.rs` menggunakan format `-z` (*NUL-terminated output*) sehingga berkas dengan spasi, karakter khusus, maupun berkas yang di-rename (`R`) diparsing dengan presisi tanpa pemotongan string yang salah.
+  - Menambahkan validasi `output.status.success()` pada perintah Git (`branch`, `rev-parse`, `status`) agar output error saat perintah gagal tidak disalahartikan sebagai hasil sukses.
+- **Sinkronisasi Konkurensi Penyimpanan Aset (BUG-08):**
+  - Menambahkan `write_lock` pada `fs_save_asset` di `fs.rs` untuk mencegah race condition (TOCTOU) saat penentuan nama berkas unik dan operasi penyalinan aset berlangsung bersamaan.
+- **Pencegahan Potensi Deadlock Sesi Vault (BUG-09):**
+  - Memperbaiki alur `vault_get_current` di `vault.rs` dengan menyelesaikan iterasi dan seleksi path vault sebelum membuka session baru, mencegah potensi konflik penguncian resource (*lock contention*).
+- **Normalisasi Path Multi-Platform (BUG-11):**
+  - Menyesuaikan penanganan separator path di `normalize_path_str` agar transformasi separator hanya berjalan di Windows (`#[cfg(windows)]`) dan menjaga keutuhan nama berkas di platform non-Windows.
+- **Peringatan Encoding Berkas Non-UTF8 (BUG-12):**
+  - Menambahkan pengecekan encoding eksplisit pada `fs_import_external` di `fs.rs` dengan pencatatan peringatan ke console developer saat mengimpor berkas teks dengan encoding bukan UTF-8 murni.
+- **Proteksi Batas Ukuran Berkas JSON Konfigurasi (BUG-13):**
+  - Mengaktifkan batas keamanan `MAX_JSON_BYTES` (1 MiB) di `store.rs` untuk pemuatan berkas pengaturan, workspace, dan konfigurasi vault guna mencegah konsumsi memori berlebih (OOM) dari berkas yang korup.
+- **Validasi Path Component-Aware (BUG-14):**
+  - Mengganti pencocokan awalan path string biasa dengan perbandingan berbasis segmen komponen path (`Path::components()`) di `paths.rs` untuk mencegah lolosnya akses path semu di luar root vault (contoh: folder `C:\foobar` tidak dianggap berada di dalam `C:\foo`).
+- **Normalisasi Path UNC pada File Watcher (BUG-15):**
+  - Membersihkan prefix verbatim Windows (`\\?\`) pada path event sebelum filter folder `.kensidian` agar event perubahan berkas konsisten terdeteksi di berbagai driver filesystem.
+
 ## [1.2.4] - 2026-11-23
 ### Ditambahkan
 - **Fitur Hapus Vault dari Riwayat Sesi (Remove from Recent):**

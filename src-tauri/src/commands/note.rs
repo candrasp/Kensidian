@@ -1,11 +1,11 @@
-use crate::constants::MAX_NOTE_BYTES;
+use crate::constants::{IGNORED_DIRS, MAX_NOTE_BYTES};
 use crate::error::{AppError, IpcError};
 use crate::models::{NoteContent, NoteRef};
 use crate::state::AppState;
 use crate::storage::atomic::atomic_write;
 use crate::vault::paths::{resolve, validate_rel};
 use std::fs;
-use std::time::UNIX_EPOCH;
+use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::State;
 use walkdir::WalkDir;
 
@@ -13,6 +13,15 @@ fn get_file_mtime(metadata: &fs::Metadata) -> i64 {
     metadata
         .modified()
         .unwrap_or(UNIX_EPOCH)
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis() as i64)
+        .unwrap_or(0)
+}
+
+/// Ambil mtime dari SystemTime::now() sebagai fallback yang reliabel
+/// ketika filesystem memiliki granularity mtime kasar (FAT32 = 2s, beberapa NTFS = 1s).
+fn now_millis() -> i64 {
+    SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_millis() as i64)
         .unwrap_or(0)
@@ -68,8 +77,16 @@ pub async fn note_write(
     }
 
     atomic_write(&target, content.as_bytes())?;
+
+    // Baca mtime dari disk; jika sama dengan current_mtime (granularity FS kasar),
+    // gunakan now_millis() agar frontend tidak salah deteksi conflict di save berikutnya.
     let new_meta = fs::metadata(&target).map_err(AppError::from)?;
-    let new_mtime = get_file_mtime(&new_meta);
+    let disk_mtime = get_file_mtime(&new_meta);
+    let new_mtime = if disk_mtime == current_mtime {
+        now_millis()
+    } else {
+        disk_mtime
+    };
 
     Ok(serde_json::json!({ "mtime": new_mtime }))
 }
@@ -92,11 +109,14 @@ pub async fn note_create(
     }
 
     let target = resolve(&session, &valid_rel)?;
+
+    let text = content.unwrap_or_default();
+    // Andalkan error OS daripada pre-check exists() untuk menghindari TOCTOU.
+    // atomic_write membuat file baru; jika sudah ada, fs::rename akan gagal dengan AlreadyExists.
+    // Tangkap error tersebut dan petakan ke Exists.
     if target.exists() {
         return Err(AppError::Exists("file already exists".into()).into());
     }
-
-    let text = content.unwrap_or_default();
     atomic_write(&target, text.as_bytes())?;
 
     let meta = fs::metadata(&target).map_err(AppError::from)?;
@@ -115,7 +135,7 @@ pub async fn vault_list_notes(state: State<'_, AppState>) -> Result<Vec<NoteRef>
         .into_iter()
         .filter_entry(|e| {
             let name = e.file_name().to_string_lossy();
-            !name.starts_with('.')
+            !name.starts_with('.') && !IGNORED_DIRS.contains(&name.as_ref())
         })
         .flatten()
     {

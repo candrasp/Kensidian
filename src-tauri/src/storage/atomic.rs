@@ -2,8 +2,6 @@ use crate::error::AppError;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;
-use std::thread;
-use std::time::Duration;
 
 pub fn atomic_write(target_path: &Path, content: &[u8]) -> Result<(), AppError> {
     let parent = target_path
@@ -33,21 +31,15 @@ pub fn atomic_write(target_path: &Path, content: &[u8]) -> Result<(), AppError> 
         file.sync_data()?;
     }
 
-    let backoffs = [
-        Duration::from_millis(20),
-        Duration::from_millis(50),
-        Duration::from_millis(100),
-    ];
+    // Coba rename hingga 3x tanpa blocking sleep agar tidak memblok
+    // async runtime Tokio. Semua caller sudah memegang write_lock,
+    // sehingga serialisasi write sudah terjamin di level aplikasi.
     let mut last_err = None;
-
-    for (i, delay) in backoffs.iter().enumerate() {
+    for _ in 0..3 {
         match fs::rename(&tmp_path, target_path) {
             Ok(()) => return Ok(()),
             Err(e) => {
                 last_err = Some(e);
-                if i < backoffs.len() - 1 {
-                    thread::sleep(*delay);
-                }
             }
         }
     }

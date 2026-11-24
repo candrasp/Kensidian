@@ -15,6 +15,7 @@ import { useTabsStore } from '@/stores/tabs'
 import { useVaultStore } from '@/stores/vault'
 import { useToastStore } from '@/stores/toast'
 import { ipc } from '@/lib/ipc'
+import { PROJECT_DASHBOARD_PATH } from '@/lib/constants'
 import { t } from '@/lib/i18n/id'
 import IconButton from '@/components/ui/IconButton.vue'
 import Tooltip from '@/components/ui/Tooltip.vue'
@@ -158,7 +159,7 @@ const itemClass = 'rounded-sm px-2 py-1.5 hover:bg-hover cursor-pointer outline-
 
     <div class="ml-auto flex items-center gap-0.5 shrink-0 mb-0.5">
       <!-- Tombol dokumen aktif: Salin, Edit/View, More, PanelRight -->
-      <template v-if="tabsStore.activePath">
+      <template v-if="tabsStore.activePath && tabsStore.activePath !== PROJECT_DASHBOARD_PATH">
         <Tooltip :content="`${t.copyNoteContent} (Ctrl+Shift+C)`" side="bottom">
           <button
             type="button"

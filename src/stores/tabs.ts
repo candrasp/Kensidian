@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { TabState, NoteMode } from '@/lib/ipc/types'
+import { PROJECT_DASHBOARD_PATH } from '@/lib/constants'
 
 function createEmptyTab(): TabState {
   return {
@@ -45,7 +46,7 @@ export const useTabsStore = defineStore('tabs', () => {
     }
 
     const currentTab = activeTab.value
-    if (currentTab && !options?.newTab) {
+    if (currentTab && !options?.newTab && !currentTab.pinned) {
       if (currentTab.path === null) {
         currentTab.path = path
         currentTab.history = [path]
@@ -76,9 +77,43 @@ export const useTabsStore = defineStore('tabs', () => {
     }
   }
 
+  function ensureProjectDashboardTab() {
+    const existingIdx = tabs.value.findIndex(
+      (t) => t.path === PROJECT_DASHBOARD_PATH || t.id === 'project-dashboard-tab'
+    )
+    if (existingIdx !== -1) {
+      const existing = tabs.value[existingIdx]
+      existing.pinned = true
+      existing.path = PROJECT_DASHBOARD_PATH
+      // Jika bukan di indeks 0, pindahkan ke depan
+      if (existingIdx !== 0) {
+        tabs.value.splice(existingIdx, 1)
+        tabs.value.unshift(existing)
+      }
+      return
+    }
+    const dashboardTab: TabState = {
+      id: 'project-dashboard-tab',
+      path: PROJECT_DASHBOARD_PATH,
+      mode: 'view',
+      scrollTop: 0,
+      scrollLine: 1,
+      cursor: null,
+      history: [PROJECT_DASHBOARD_PATH],
+      historyIndex: 0,
+      dirty: false,
+      mtime: null,
+      pinned: true,
+    }
+    // Sisipkan di posisi pertama
+    tabs.value.unshift(dashboardTab)
+    activeId.value = dashboardTab.id
+  }
+
   function closeTab(id: string) {
     const idx = tabs.value.findIndex((t) => t.id === id)
     if (idx === -1) return
+    if (tabs.value[idx].pinned) return // Tab pinned (seperti Dashboard) tidak boleh ditutup
 
     tabs.value.splice(idx, 1)
     if (tabs.value.length === 0) {
@@ -186,5 +221,6 @@ export const useTabsStore = defineStore('tabs', () => {
     reloadTrigger,
     reloadCurrentNote,
     resetTabs,
+    ensureProjectDashboardTab,
   }
 })

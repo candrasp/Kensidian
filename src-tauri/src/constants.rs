@@ -1,5 +1,25 @@
 pub const APP_NAME: &str = "Kensidian";
 
+pub const IGNORED_DIRS: &[&str] = &[
+    "node_modules",
+    "target",
+    "dist",
+    "build",
+    ".git",
+    ".kensidian",
+    ".svn",
+    ".hg",
+    "src",
+    "src-tauri",
+    "public",
+    "vendor",
+    "bin",
+    "obj",
+    "out",
+    ".vscode",
+    ".idea",
+];
+
 pub const NAME_MAX_CHARS: usize = 255;
 pub const PATH_MAX_CHARS: usize = 1024;
 pub const MAX_NOTE_BYTES: u64 = 10 * 1024 * 1024; // 10 MiB

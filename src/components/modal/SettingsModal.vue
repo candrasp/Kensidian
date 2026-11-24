@@ -30,6 +30,7 @@ const fontOptions = [
   { value: '', label: t.fontDefault },
   { value: '"Inter Variable", Inter, sans-serif', label: t.fontInter },
   { value: '"Plus Jakarta Sans", sans-serif', label: t.fontJakarta },
+  { value: '"Source Sans 3", sans-serif', label: t.fontSourceSans },
   { value: 'Merriweather, Georgia, serif', label: t.fontSerif },
   { value: '"JetBrains Mono", monospace', label: t.fontMono },
 ]

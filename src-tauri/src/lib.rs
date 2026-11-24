@@ -11,6 +11,7 @@ pub mod vault;
 
 use commands::fs::*;
 use commands::note::*;
+use commands::project::*;
 use commands::search::*;
 use commands::store::*;
 use commands::vault::*;
@@ -62,6 +63,8 @@ pub fn run() {
             fs_write_asset,
             fs_import_external,
             search_in_vault,
+            project_get_git_status,
+            project_open_terminal,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

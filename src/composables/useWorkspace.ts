@@ -3,12 +3,27 @@ import { useUiStore } from '@/stores/ui'
 import { useTabsStore } from '@/stores/tabs'
 import { useVaultStore } from '@/stores/vault'
 import { ipc } from '@/lib/ipc'
-import type { Workspace } from '@/lib/ipc/types'
+import type { Workspace, TabState } from '@/lib/ipc/types'
+import { PROJECT_DASHBOARD_PATH } from '@/lib/constants'
 
 function sanitizeTabs(rawTabs: Workspace['tabs'], activeTabId: string | null, validNotes: Set<string> | null) {
-  const filtered = rawTabs
-    .filter((t) => !t.path || (validNotes ? validNotes.has(t.path) : true))
-    .map((t) => ({ ...t, dirty: false, mtime: null }))
+  const seenIds = new Set<string>()
+  const filtered: TabState[] = []
+
+  for (const t of rawTabs) {
+    if (!t.path || t.path === PROJECT_DASHBOARD_PATH || (validNotes ? validNotes.has(t.path) : true)) {
+      const id = seenIds.has(t.id) ? crypto.randomUUID() : t.id
+      seenIds.add(id)
+      filtered.push({
+        ...t,
+        id,
+        dirty: false,
+        mtime: null,
+        pinned: t.path === PROJECT_DASHBOARD_PATH ? true : t.pinned,
+      })
+    }
+  }
+
   if (filtered.length === 0) return null
   const activeId = filtered.some((t) => t.id === activeTabId) ? activeTabId! : filtered[0].id
   return { tabs: filtered, activeId }

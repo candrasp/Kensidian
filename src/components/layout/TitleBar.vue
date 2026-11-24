@@ -12,7 +12,7 @@ import {
   HelpCircle,
 } from 'lucide-vue-next'
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { APP_NAME } from '@/lib/constants'
+import { APP_NAME, PROJECT_DASHBOARD_PATH } from '@/lib/constants'
 import { isTauri } from '@/lib/ipc'
 import { useVaultStore } from '@/stores/vault'
 import { useTabsStore } from '@/stores/tabs'
@@ -28,6 +28,7 @@ let unlistenResize: (() => void) | null = null
 
 const activeNoteTitle = computed(() => {
   if (!tabsStore.activePath) return null
+  if (tabsStore.activePath === PROJECT_DASHBOARD_PATH) return 'Dashboard'
   const name = tabsStore.activePath.split('/').pop() ?? tabsStore.activePath
   return name.replace(/\.md$/, '')
 })
@@ -82,9 +83,9 @@ onUnmounted(() => {
   >
     <div class="flex items-center gap-0.5">
       <IconButton :icon="PanelLeft" :label="uiStore.leftSidebarVisible ? t.hideLeftSidebar : t.showLeftSidebar" :active="uiStore.leftSidebarVisible" @click="uiStore.toggleLeftSidebar" />
-      <IconButton v-if="tabsStore.activePath" :icon="ArrowLeft" :label="`${t.back} (Alt+←)`" :disabled="!tabsStore.canGoBack" @click="tabsStore.back" />
-      <IconButton v-if="tabsStore.activePath" :icon="ArrowRight" :label="`${t.forward} (Alt+→)`" :disabled="!tabsStore.canGoForward" @click="tabsStore.forward" />
-      <IconButton v-if="tabsStore.activePath" :icon="RotateCw" :label="t.refreshNote" @click="tabsStore.reloadCurrentNote()" />
+      <IconButton v-if="tabsStore.activePath && tabsStore.activePath !== PROJECT_DASHBOARD_PATH" :icon="ArrowLeft" :label="`${t.back} (Alt+←)`" :disabled="!tabsStore.canGoBack" @click="tabsStore.back" />
+      <IconButton v-if="tabsStore.activePath && tabsStore.activePath !== PROJECT_DASHBOARD_PATH" :icon="ArrowRight" :label="`${t.forward} (Alt+→)`" :disabled="!tabsStore.canGoForward" @click="tabsStore.forward" />
+      <IconButton v-if="tabsStore.activePath && tabsStore.activePath !== PROJECT_DASHBOARD_PATH" :icon="RotateCw" :label="t.refreshNote" @click="tabsStore.reloadCurrentNote()" />
       <IconButton :icon="HelpCircle" :label="t.helpAndAbout" @click="uiStore.modal = 'help'" />
     </div>
 

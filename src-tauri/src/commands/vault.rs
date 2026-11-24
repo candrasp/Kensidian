@@ -12,10 +12,21 @@ use tauri::{AppHandle, Emitter, Manager, State};
 fn normalize_path_str(raw: &str) -> String {
     let p = PathBuf::from(raw);
     let canonical = p.canonicalize().unwrap_or(p);
-    canonical
-        .to_string_lossy()
-        .trim_start_matches(r"\\?\")
-        .replace('/', "\\")
+    // Strip UNC verbatim prefix Windows (\\?\) agar path konsisten.
+    // replace '/' → '\' hanya dilakukan di Windows; di platform lain
+    // backslash bisa menjadi bagian nama file yang valid.
+    #[cfg(windows)]
+    {
+        canonical
+            .to_string_lossy()
+            .trim_start_matches(r"\\?\")
+            .replace('/', "\\")
+            .to_string()
+    }
+    #[cfg(not(windows))]
+    {
+        canonical.to_string_lossy().into_owned()
+    }
 }
 
 fn update_recent_vaults(app_state: &AppState, info: &VaultInfo) -> Result<(), AppError> {
@@ -32,6 +43,7 @@ fn update_recent_vaults(app_state: &AppState, info: &VaultInfo) -> Result<(), Ap
     list.push(VaultInfo {
         path: target_norm.clone(),
         name: info.name.clone(),
+        is_project: info.is_project,
     });
 
     for item in raw_list {
@@ -42,6 +54,7 @@ fn update_recent_vaults(app_state: &AppState, info: &VaultInfo) -> Result<(), Ap
             list.push(VaultInfo {
                 path: norm,
                 name: item.name,
+                is_project: item.is_project,
             });
         }
     }
@@ -75,9 +88,14 @@ pub async fn vault_open(
         .trim_start_matches(r"\\?\")
         .to_string();
 
+    let is_project = path_buf.join(".git").exists()
+        || path_buf.join("package.json").exists()
+        || path_buf.join("Cargo.toml").exists();
+
     let info = VaultInfo {
         path: clean_path.clone(),
         name,
+        is_project,
     };
 
     // Gunakan PathBuf dari clean_path (tanpa UNC prefix) sebagai canonical_root
@@ -118,7 +136,11 @@ pub async fn vault_open(
         notify::recommended_watcher(move |res: Result<notify::Event, notify::Error>| {
             if let Ok(event) = res {
                 let dominated_by_tmp = event.paths.iter().any(|p| {
-                    p.to_string_lossy().contains(".kensidian")
+                    let clean = p
+                        .to_string_lossy()
+                        .trim_start_matches(r"\\?\")
+                        .to_string();
+                    clean.contains(".kensidian")
                         || p.file_name()
                             .map(|n| n.to_string_lossy().starts_with('.'))
                             .unwrap_or(false)
@@ -142,6 +164,15 @@ pub async fn vault_open(
             .session
             .write()
             .map_err(|_| AppError::Io("failed to acquire session write lock".into()))?;
+
+        // Drop watcher lama secara eksplisit sebelum session di-replace,
+        // agar tidak ada watcher duplikat yang tetap mengirim vault:changed.
+        if let Some(old_session) = session_lock.as_ref() {
+            if let Ok(mut w) = old_session._watcher.lock() {
+                *w = None;
+            }
+        }
+
         *session_lock = Some(session);
     }
 
@@ -177,6 +208,14 @@ pub async fn vault_close(state: State<'_, AppState>) -> Result<(), IpcError> {
         .session
         .write()
         .map_err(|_| AppError::Io("failed to acquire session write lock".into()))?;
+
+    // Drop watcher eksplisit agar file watcher berhenti sebelum session dibuang.
+    if let Some(old_session) = session_lock.as_ref() {
+        if let Ok(mut w) = old_session._watcher.lock() {
+            *w = None;
+        }
+    }
+
     *session_lock = None;
     Ok(())
 }
@@ -186,7 +225,7 @@ pub async fn vault_get_current(
     app: AppHandle,
     state: State<'_, AppState>,
 ) -> Result<Option<VaultInfo>, IpcError> {
-    // Jika sudah ada session aktif, kembalikan langsung
+    // Jika sudah ada session aktif, kembalikan langsung tanpa buka vault baru.
     if let Ok(session) = state.get_session() {
         return Ok(Some(session.info.clone()));
     }
@@ -200,16 +239,27 @@ pub async fn vault_get_current(
     let content = fs::read_to_string(&recent_path).map_err(AppError::from)?;
     let list: Vec<VaultInfo> = serde_json::from_str(&content).unwrap_or_default();
 
-    for item in list {
+    // Ambil path vault pertama yang masih ada sebelum memanggil vault_open,
+    // agar kita tidak memegang referensi apapun ke state saat vault_open
+    // mengambil write-lock pada session (mencegah potensi deadlock di masa depan
+    // jika RwLock diubah menjadi non-re-entrant yang lebih ketat).
+    let target_path = list.into_iter().find_map(|item| {
         let norm = normalize_path_str(&item.path);
         let p = PathBuf::from(&norm);
         if p.exists() && p.is_dir() {
-            // Restore session secara otomatis
-            let info = vault_open(app, state, norm).await?;
-            return Ok(Some(info));
+            Some(norm)
+        } else {
+            None
         }
+    });
+
+    match target_path {
+        Some(path) => {
+            let info = vault_open(app, state, path).await?;
+            Ok(Some(info))
+        }
+        None => Ok(None),
     }
-    Ok(None)
 }
 
 #[tauri::command]
@@ -230,6 +280,7 @@ pub async fn vault_list_recent(state: State<'_, AppState>) -> Result<Vec<VaultIn
             list.push(VaultInfo {
                 path: norm,
                 name: item.name,
+                is_project: item.is_project,
             });
         }
     }
@@ -261,6 +312,7 @@ pub async fn vault_remove_recent(
                 list.push(VaultInfo {
                     path: norm,
                     name: item.name,
+                    is_project: item.is_project,
                 });
             }
         }

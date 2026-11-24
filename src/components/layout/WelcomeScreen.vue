@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { FolderOpen, FolderPlus, X } from 'lucide-vue-next'
+import { FolderOpen, FolderPlus, FolderGit2, X } from 'lucide-vue-next'
 import { APP_NAME } from '@/lib/constants'
 import { useVaultStore } from '@/stores/vault'
 import { t } from '@/lib/i18n/id'
@@ -69,6 +69,15 @@ async function handleCreateVault() {
 
         <button
           type="button"
+          class="flex items-center justify-center gap-2 rounded-sm border border-line bg-panel-alt py-2 text-sm font-medium text-fg hover:bg-hover transition-colors duration-100 cursor-pointer"
+          @click="handleOpenVault"
+        >
+          <FolderGit2 class="h-4 w-4 text-accent" :stroke-width="1.75" />
+          {{ t.openProjectFolder }}
+        </button>
+
+        <button
+          type="button"
           class="flex items-center justify-center gap-2 rounded-sm border border-line bg-transparent py-2 text-sm font-medium text-fg hover:bg-hover transition-colors duration-100 cursor-pointer"
           @click="handleCreateVault"
         >
@@ -89,10 +98,12 @@ async function handleCreateVault() {
           >
             <button
               type="button"
-              class="truncate flex-1 text-left cursor-pointer outline-none"
+              class="truncate flex-1 text-left cursor-pointer outline-none flex items-center gap-2"
               @click="vaultStore.openVault(v.path)"
             >
-              {{ v.name }}
+              <FolderGit2 v-if="v.isProject" class="h-3.5 w-3.5 text-accent shrink-0" :stroke-width="1.75" />
+              <span>{{ v.name }}</span>
+              <span v-if="v.isProject" class="text-[9px] px-1 py-0.2 rounded-xs bg-accent-soft text-accent font-medium">Proyek</span>
             </button>
             <button
               type="button"

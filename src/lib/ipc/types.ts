@@ -16,6 +16,7 @@ export interface TabState {
   historyIndex: number
   dirty: boolean
   mtime: number | null
+  pinned?: boolean
 }
 
 export interface Workspace {
@@ -31,7 +32,24 @@ export interface Workspace {
   bookmarks: string[]
 }
 
-export interface VaultInfo { path: string; name: string }
+export interface VaultInfo { path: string; name: string; isProject?: boolean }
+
+export interface GitCommitInfo {
+  hash: string
+  message: string
+  author: string
+  timestamp: number
+}
+
+export interface GitStatus {
+  isGit: boolean
+  branch: string
+  uncommittedCount: number
+  uncommittedFiles: string[]
+  lastCommit?: GitCommitInfo | null
+  ahead: number
+  behind: number
+}
 export interface FileEntry { path: string; name: string; kind: 'file' | 'folder'; mtime: number; size: number }
 export interface NoteRef { path: string; name: string; mtime: number }
 export interface NoteContent { content: string; mtime: number; size: number }

@@ -39,13 +39,28 @@ fn path_starts_with(child: &Path, parent: &Path) -> bool {
 
     #[cfg(windows)]
     {
-        clean_child
-            .to_lowercase()
-            .starts_with(&clean_parent.to_lowercase())
+        // Komparasi berbasis komponen path (bukan substring murni) agar "C:\foobar" tidak cocok dengan "C:\foo"
+        let child_p = Path::new(&clean_child);
+        let parent_p = Path::new(&clean_parent);
+        let child_components: Vec<_> = child_p
+            .components()
+            .map(|c| c.as_os_str().to_string_lossy().to_lowercase())
+            .collect();
+        let parent_components: Vec<_> = parent_p
+            .components()
+            .map(|c| c.as_os_str().to_string_lossy().to_lowercase())
+            .collect();
+
+        if parent_components.len() > child_components.len() {
+            return false;
+        }
+        child_components[..parent_components.len()] == parent_components[..]
     }
     #[cfg(not(windows))]
     {
-        clean_child.starts_with(clean_parent)
+        let child_p = Path::new(clean_child);
+        let parent_p = Path::new(clean_parent);
+        child_p.starts_with(parent_p)
     }
 }
 

@@ -23,6 +23,9 @@ vaultStore.registerSwitchHandlers({
   },
   after: async () => {
     await workspace.loadWorkspace()
+    if (vaultStore.current?.isProject) {
+      tabsStore.ensureProjectDashboardTab()
+    }
   },
 })
 
@@ -31,6 +34,9 @@ onMounted(async () => {
   await vaultStore.loadInitial()
   if (vaultStore.current) {
     await workspace.loadWorkspace()
+    if (vaultStore.current.isProject) {
+      tabsStore.ensureProjectDashboardTab()
+    }
   }
   workspace.setupAutoSave()
 

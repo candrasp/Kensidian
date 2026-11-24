@@ -1,3 +1,4 @@
+use crate::constants::IGNORED_DIRS;
 use crate::error::{AppError, IpcError};
 use crate::models::SearchHit;
 use crate::state::AppState;
@@ -43,7 +44,7 @@ pub async fn search_in_vault(
         .into_iter()
         .filter_entry(|e| {
             let name = e.file_name().to_string_lossy();
-            !name.starts_with('.') && name != "node_modules"
+            !name.starts_with('.') && !IGNORED_DIRS.contains(&name.as_ref())
         })
         .filter_map(|e| e.ok())
     {
@@ -124,15 +125,40 @@ fn find_matches(
             query.to_lowercase()
         };
 
+        // Gunakan search_for.len() bukan query.len() agar tetap benar
+        // saat lowercase mengubah panjang byte (mis. karakter non-ASCII tertentu).
+        let match_len = search_for.len();
         let mut start = 0;
         while let Some(pos) = search_in[start..].find(&search_for) {
             let abs_pos = start + pos;
-            matches.push([abs_pos, abs_pos + query.len()]);
-            start = abs_pos + query.len();
+            matches.push([abs_pos, abs_pos + match_len]);
+            start = abs_pos + match_len;
         }
     }
 
     matches
+}
+
+/// Snap index `i` ke batas karakter UTF-8 terdekat di bawahnya.
+fn floor_char_boundary(s: &str, mut i: usize) -> usize {
+    if i >= s.len() {
+        return s.len();
+    }
+    while i > 0 && !s.is_char_boundary(i) {
+        i -= 1;
+    }
+    i
+}
+
+/// Snap index `i` ke batas karakter UTF-8 terdekat di atasnya.
+fn ceil_char_boundary(s: &str, mut i: usize) -> usize {
+    if i >= s.len() {
+        return s.len();
+    }
+    while i < s.len() && !s.is_char_boundary(i) {
+        i += 1;
+    }
+    i
 }
 
 fn create_snippet(line: &str, matches: &[[usize; 2]]) -> String {
@@ -143,8 +169,10 @@ fn create_snippet(line: &str, matches: &[[usize; 2]]) -> String {
     let first_match = matches[0][0];
     let last_match = matches.last().unwrap()[1];
 
-    let start = first_match.saturating_sub(CONTEXT_CHARS);
-    let end = (last_match + CONTEXT_CHARS).min(line.len());
+    // Snap ke batas char UTF-8 agar &line[start..end] tidak panic
+    // pada karakter multi-byte (emoji, CJK, aksara non-Latin, dll.).
+    let start = floor_char_boundary(line, first_match.saturating_sub(CONTEXT_CHARS));
+    let end = ceil_char_boundary(line, (last_match + CONTEXT_CHARS).min(line.len()));
 
     let mut snippet = String::new();
     if start > 0 {
