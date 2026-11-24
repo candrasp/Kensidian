@@ -13,6 +13,10 @@
   ⚡ <strong>Sangat Ringan</strong> • 🔒 <strong>100% Milikmu (File Lokal)</strong> • 🎨 <strong>Estetis & Kustomisasi Tanpa Batas</strong> • ☁️ <strong>Sinkronisasi Cloudflare R2</strong>
 </p>
 
+<p align="center">
+  <img src="hero.png" alt="Tampilan Utama Kensidian" width="900" />
+</p>
+
 ---
 
 ## ✨ Fitur Unggulan
@@ -105,6 +109,19 @@
 - Menggunakan arsitektur **Tauri v2** berbasis bahasa pemrograman **Rust** yang memanfaatkan webview native sistem operasi.
 - **Konsumsi RAM Sangat Rendah**: Jauh lebih hemat sumber daya dan ringan dibandingkan aplikasi berbasis Electron.
 - Waktu peluncuran (*startup*) instan tanpa lag.
+
+### 14. 🧑‍💻 Mode Proyek & Dashboard Tracker
+- **Buka Folder Proyek Koding**: Buka direktori repositori proyek langsung dari pemilih vault atau layar awal dengan deteksi stack teknologi otomatis (*Tauri, Vue, Tailwind, TypeScript, Pinia, dependencies*).
+- **Dashboard Proyek Terintegrasi**:
+  - **Status Git**: Memantau branch aktif, jumlah file belum dicommit, commit terakhir, serta daftar perubahan aktif yang bisa langsung diklik untuk dibuka.
+  - **Sesi Koding Terakhir (*Devlog*)**: Mencatat apa yang sudah selesai dikerjakan dan target langkah berikutnya langsung ke berkas Markdown di folder `devlog/`.
+  - **Progres Target & Checklist**: Membaca checklist `- [ ]` / `- [x]` dari file `ROADMAP.md`, `TODO-PROJEK.md`, atau `BUG.md` dengan progress bar otomatis.
+  - **Versi & Rilis Terakhir**: Menampilkan ringkasan versi terbaru langsung dari `CHANGELOG.md`.
+- **Smart Ignore & Safety Guard**: Backend Rust otomatis mengabaikan direktori berat (`node_modules`, `target`, `dist`, `.git`, `.vscode`) dan melindungi folder kode sumber dari penghapusan tidak sengaja.
+
+<p align="center">
+  <img src="mode-proyek.png" alt="Dashboard Mode Proyek Kensidian" width="900" />
+</p>
 
 ---
 
