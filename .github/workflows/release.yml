@@ -97,3 +97,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release edit "${{ github.ref_name }}" --repo "${{ github.repository }}" --draft=false
+
+  publish-winget:
+    needs: publish-release
+    if: ${{ secrets.WINGET_TOKEN != '' }}
+    runs-on: windows-latest
+    steps:
+      - name: Submit WinGet Manifest
+        uses: vedantmgoyal9/winget-releaser@main
+        with:
+          identifier: CandraSP.Kensidian
+          installers-regex: '\.msi$'
+          token: ${{ secrets.WINGET_TOKEN }}

@@ -9,13 +9,13 @@ Daftar tugas untuk menyediakan instalasi **Kensidian** melalui package manager t
 Artefak dari `windows-latest` (`release.yml`): `.msi` dan NSIS `-setup.exe`.
 
 ### A. WinGet (`winget install CandraSP.Kensidian`)
-- [ ] Pastikan minimal satu rilis publik sudah terbit di GitHub Releases dengan installer `.msi` atau `-setup.exe`.
-- [ ] Pasang `wingetcreate` (`winget install Microsoft.WingetCreate`).
-- [ ] Generate manifest awal dari URL installer rilis GitHub:
+- [x] Pastikan minimal satu rilis publik sudah terbit di GitHub Releases dengan installer `.msi` atau `-setup.exe`.
+- [x] Pasang `wingetcreate` (`winget install Microsoft.WingetCreate`).
+- [x] Generate manifest awal dari URL installer rilis GitHub:
   - `wingetcreate new https://github.com/candrasp/kensidian/releases/download/v<VERSI>/Kensidian_<VERSI>_x64_en-US.msi`
-- [ ] Verifikasi metadata manifest (`PackageIdentifier: CandraSP.Kensidian`, `PackageName: Kensidian`, `License: GPL-3.0`, `Publisher: CandraSP`, `InstallerType: wix` / `nsis`) dan validasi lokal dengan `winget validate --manifest <folder-manifest>`.
-- [ ] Submit Pull Request pertama ke repositori `microsoft/winget-pkgs` hingga lolos validasi bot & di-merge.
-- [ ] Tambahkan otomatisasi PR manifest pada setiap rilis di `.github/workflows/release.yml` menggunakan `vedantmgoyal9/winget-releaser` (butuh `WINGET_TOKEN` di GitHub Secrets).
+- [x] Verifikasi metadata manifest (`PackageIdentifier: CandraSP.Kensidian`, `PackageName: Kensidian`, `License: GPL-3.0`, `Publisher: CandraSP`, `InstallerType: wix` / `nsis`) dan validasi lokal dengan `winget validate --manifest <folder-manifest>`.
+- [ ] Submit Pull Request pertama ke repositori `microsoft/winget-pkgs` hingga lolos validasi bot & di-merge (`microsoft/winget-pkgs#491439` sudah dibuat, menunggu CLA/bot & merge).
+- [ ] Tambahkan otomatisasi PR manifest pada setiap rilis di `.github/workflows/release.yml` menggunakan `vedantmgoyal9/winget-releaser` (workflow sudah ditambahkan; tinggal set `WINGET_TOKEN` di GitHub Secrets).
 
 ### B. Code Signing Windows (Disarankan)
 - [ ] Evaluasi sertifikat Authenticode (mis. SignPath Foundation untuk open-source atau Azure Trusted Signing) agar installer dari WinGet tidak memicu peringatan Windows Defender SmartScreen.
