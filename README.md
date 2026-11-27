@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="screenshot/hero.webp" alt="Tampilan Utama Kensidian" width="900" />
+  <img src="screenshot/hero.webp" alt="Tampilan Utama Kensidian" />
 </p>
 
 ---
@@ -46,16 +46,12 @@ Checkbox dapat diklik langsung di **Mode View** maupun **Mode Edit**, dengan duk
 - `[ ]` **Todo** • `[x]` **Done** • `[/]` **In Progress** • `[-]` **Cancelled**
 - `[>]` **Forwarded** • `[i]` **Info** • `[?]` **Question** • `[!]` **Warning**
 
-<p align="center">
-  <img src="screenshot/task.webp" alt="Sistem Checkbox dan Task List Interaktif Kensidian" width="850" />
-</p>
-
 ### 4. Deteksi Kode Warna Otomatis & Salin Sekali Klik
 - Mengenali format kode warna **HEX**, **RGB/RGBA**, dan **HSL/HSLA** secara otomatis di dalam catatan.
 - Menampilkan kotak pratinjau warna (*color swatch*) interaktif di sebelah kode warna — klik untuk langsung menyalin kode warna ke clipboard.
 
 <p align="center">
-  <img src="screenshot/css-color-view.webp" alt="Deteksi Kode Warna Otomatis di Kensidian" width="850" />
+  <img src="screenshot/css-color-view.webp" alt="Deteksi Kode Warna Otomatis di Kensidian" />
 </p>
 
 ### 5. Salin Instan Seluruh Halaman (AI Agent-Ready)
@@ -80,7 +76,7 @@ Checkbox dapat diklik langsung di **Mode View** maupun **Mode Edit**, dengan duk
 - Tersedia ratusan pilihan ikon **Lucide** dan **FontAwesome Brands** (GitHub, Figma, Discord, dll.), palet warna aksen, serta pencarian ikon real-time.
 
 <p align="center">
-  <img src="screenshot/icon-color.webp" alt="Kustomisasi Ikon dan Warna Berkas di Kensidian" width="850" />
+  <img src="screenshot/icon-color.webp" alt="Kustomisasi Ikon dan Warna Berkas di Kensidian" />
 </p>
 
 ### 9. Tema, Skema Warna, Tipografi & Bahasa
@@ -89,7 +85,7 @@ Checkbox dapat diklik langsung di **Mode View** maupun **Mode Edit**, dengan duk
 - **Tipografi & Bahasa**: Pengaturan font teks, font kode, ukuran huruf, lebar baris baca, serta antarmuka multi-bahasa (**Indonesia** & **Inggris**).
 
 <p align="center">
-  <img src="screenshot/settings.webp" alt="Pengaturan Tema dan Preferensi Kensidian" width="850" />
+  <img src="screenshot/settings.webp" alt="Pengaturan Tema dan Preferensi Kensidian" />
 </p>
 
 ---
@@ -99,7 +95,7 @@ Checkbox dapat diklik langsung di **Mode View** maupun **Mode Edit**, dengan duk
 Kensidian dapat membuka **Folder Proyek Koding** secara langsung melalui layar awal atau pemilih vault dengan deteksi otomatis lintas ekosistem.
 
 <p align="center">
-  <img src="screenshot/opsi-vault-atau-proyek.webp" alt="Pilihan Membuka Vault Catatan atau Folder Proyek" width="700" />
+  <img src="screenshot/opsi-vault-atau-proyek.webp" alt="Pilihan Membuka Vault Catatan atau Folder Proyek" />
 </p>
 
 ### 10. Dashboard Proyek Terintegrasi
@@ -110,7 +106,11 @@ Kensidian dapat membuka **Folder Proyek Koding** secara langsung melalui layar a
 - **Smart Ignore & Safety Guard**: Otomatis menyembunyikan direktori berat (`node_modules`, `target`, `dist`, `.git`, `.vscode`) serta folder kode non-Markdown dari pohon berkas, dan melindungi folder sumber dari penghapusan tidak sengaja.
 
 <p align="center">
-  <img src="screenshot/project-mode.webp" alt="Dashboard Mode Proyek Kensidian" width="900" />
+  <img src="screenshot/project-mode.webp" alt="Dashboard Mode Proyek Kensidian" />
+</p>
+
+<p align="center">
+  <img src="screenshot/task.webp" alt="Progres Target dan Checklist di Mode Proyek" />
 </p>
 
 ### 11. Catatan Sesi Koding (*Devlog*) & Prompt AI Agent
@@ -118,7 +118,7 @@ Kensidian dapat membuka **Folder Proyek Koding** secara langsung melalui layar a
 - Dilengkapi tombol salin prompt AI Agent siap pakai agar asisten AI dapat menuliskan ringkasan sesi koding secara otomatis sesuai format dashboard.
 
 <p align="center">
-  <img src="screenshot/catat-sesi-coding.webp" alt="Modal Catat Sesi Koding dan Prompt AI Agent" width="850" />
+  <img src="screenshot/catat-sesi-coding.webp" alt="Modal Catat Sesi Koding dan Prompt AI Agent" />
 </p>
 
 ### 12. Panduan Dokumen, Perintah CLI & Deteksi Tech Stack
@@ -127,15 +127,15 @@ Kensidian dapat membuka **Folder Proyek Koding** secara langsung melalui layar a
 - **Deteksi Tech Stack & Dependensi**: Mengenali stack teknologi, package manager (`Bun`, `pnpm`, `Yarn`, `npm`), status `Monorepo`, serta daftar dependensi proyek secara otomatis.
 
 <p align="center">
-  <img src="screenshot/doc-guide.webp" alt="Panduan dan Template Dokumen Proyek" width="850" />
+  <img src="screenshot/doc-guide.webp" alt="Panduan dan Template Dokumen Proyek" />
 </p>
 
 <p align="center">
-  <img src="screenshot/cli-list.webp" alt="Popover Daftar Perintah CLI Proyek" width="850" />
+  <img src="screenshot/cli-list.webp" alt="Popover Daftar Perintah CLI Proyek" />
 </p>
 
 <p align="center">
-  <img src="screenshot/dependencies.webp" alt="Deteksi Tech Stack dan Daftar Dependensi Proyek" width="850" />
+  <img src="screenshot/dependencies.webp" alt="Deteksi Tech Stack dan Daftar Dependensi Proyek" />
 </p>
 
 ---
