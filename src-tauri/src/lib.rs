@@ -64,7 +64,10 @@ pub fn run() {
             fs_import_external,
             search_in_vault,
             project_get_git_status,
+            project_init_git,
             project_open_terminal,
+            project_detect_ides,
+            project_open_ide,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

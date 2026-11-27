@@ -27,6 +27,7 @@ pub struct VaultSession {
     pub root: PathBuf,
     pub canonical_root: PathBuf,
     pub write_lock: Mutex<()>,
+    pub git_remote_url: Mutex<Option<Option<String>>>,
     pub _watcher: Mutex<Option<notify::RecommendedWatcher>>,
 }
 
@@ -37,6 +38,7 @@ impl VaultSession {
             root,
             canonical_root,
             write_lock: Mutex::new(()),
+            git_remote_url: Mutex::new(None),
             _watcher: Mutex::new(None),
         }
     }

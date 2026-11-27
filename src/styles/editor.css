@@ -67,16 +67,14 @@
 .view-content strong,
 .view-content b {
   font-weight: 600;
-  color: rgba(224, 108, 117, 0.9);
+  color: var(--strong);
 }
 
 .view-content code:not(pre code) {
   font-family: var(--font-mono);
   font-size: 0.9em;
-  background-color: rgba(255, 255, 255, 0.03);
-  /* Latar sangat tipis dan transparan */
-  color: #a3be8c;
-  /* Hijau sage lembut */
+  background-color: var(--bg-code);
+  color: var(--syn-string);
   padding: 1px 4px;
   border-radius: 3px;
 }
@@ -239,7 +237,7 @@
 .view-content blockquote {
   border-left: 3px solid var(--accent);
   padding: 8px 16px;
-  background-color: var(--bg-panel-alt);
+  background-color: var(--bg-code);
   border-radius: 0 8px 8px 0;
   color: var(--fg-muted);
   margin: 0 0 16px;
@@ -263,8 +261,7 @@
 
 .view-content pre code {
   background-color: transparent;
-  color: #abb2bf;
-  /* Standar One Dark/Obsidian: abu-abu pastel lembut, tidak silau putih murni */
+  color: var(--fg);
   padding: 0;
   border-radius: 0;
   font-size: 13.5px;
@@ -298,20 +295,12 @@
   margin: 2em 0;
 }
 
-.view-content code:not(pre code) {
-  background: var(--bg-code);
-  border-radius: var(--radius-sm);
-  padding: 0.1em 0.35em;
-  font-family: var(--font-mono);
-  font-size: 0.875em;
-}
-
 .view-content .code-block {
   position: relative;
   margin: 0 0 16px;
   border-radius: 0;
   border: 1px solid var(--line);
-  background: var(--bg-panel-alt);
+  background: var(--bg-code);
 }
 
 .view-content .code-header {
@@ -396,105 +385,93 @@
   border-radius: var(--radius-sm);
 }
 
-/* Syntax highlight token mapping (Pastel Lembut - One Dark / VS Code Pro) */
+/* Syntax highlight token mapping (mengikuti token --syn-* per tema) */
 .view-content .hljs-comment,
 .view-content .hljs-quote {
-  color: #5c6370;
+  color: var(--syn-comment);
   font-style: italic;
 }
 
-/* Tag HTML/XML: Kurung siku (< >) & Tag name (html, head, meta, body, div, script) -> Soft Rose Coral */
 .view-content .hljs-tag {
-  color: #abb2bf;
+  color: var(--fg);
 }
 .view-content .hljs-name,
 .view-content .hljs-tag .hljs-name,
 .view-content .hljs-selector-tag {
-  color: #e06c75;
+  color: var(--danger);
 }
 
-/* Atribut HTML/XML & Properti (lang, data-theme, charset, id, src, color) -> Soft Terracotta / Peach */
 .view-content .hljs-attr,
 .view-content .hljs-attribute,
 .view-content .hljs-property {
-  color: #d19a66;
+  color: var(--syn-number);
 }
 
-/* Keywords (const, function, let, var, import, if, etc) -> Soft Lavender Violet */
 .view-content .hljs-keyword {
-  color: #c678dd;
+  color: var(--syn-keyword);
 }
 
-/* Strings ("Snippet Tes Warna", "1.0.0", "UTF-8") -> Soft Sage Green */
 .view-content .hljs-string,
 .view-content .hljs-doctag,
 .view-content .hljs-regexp {
-  color: #98c379;
+  color: var(--syn-string);
 }
 
-/* Numbers & Booleans (1.0, 100, true, false, null) -> Warm Vanilla Gold */
 .view-content .hljs-number,
 .view-content .hljs-literal {
-  color: #e5c07b;
+  color: var(--syn-type);
 }
 
-/* Functions & Identifiers (temaObsidian, log) -> Soft Sky Blue */
 .view-content .hljs-title.function_,
 .view-content .hljs-function,
 .view-content .hljs-title {
-  color: #61afef;
+  color: var(--syn-function);
 }
 
-/* Types & Params -> Soft Mint / Cyan */
 .view-content .hljs-type,
 .view-content .hljs-title.class_,
 .view-content .hljs-class .hljs-title,
 .view-content .hljs-params {
-  color: #56b6c2;
+  color: var(--syn-type);
 }
 
-/* Variabel & CSS Selector (.class, #id) -> Soft Coral */
 .view-content .hljs-variable,
 .view-content .hljs-selector-class,
 .view-content .hljs-selector-id {
-  color: #e06c75;
+  color: var(--danger);
 }
 
-/* Meta (<!doctype html>, preprocessors) -> Soft Violet */
 .view-content .hljs-meta,
 .view-content .hljs-meta .hljs-keyword {
-  color: #c678dd;
+  color: var(--syn-meta);
 }
 
-/* Punctuation & Operators ({}, ;, :, +, =) -> Muted Slate Gray */
 .view-content .hljs-punctuation,
 .view-content .hljs-operator {
-  color: #abb2bf;
+  color: var(--fg-muted);
 }
 
-/* Bash, Shell CLI & Terminal Token Styling (GitHub Dark / One Dark modern) */
 .view-content .hljs-built_in,
 .view-content .hljs-builtin-name {
-  color: #61afef; /* Perintah bawaan shell: cd, echo, mkdir, cat, git, npm -> Sky Blue */
+  color: var(--syn-function);
   font-weight: 500;
 }
 
 .view-content .hljs-symbol,
 .view-content .hljs-bullet {
-  color: #88c0d0; /* Nord Cyan untuk prompt tanda panah / symbol */
+  color: var(--syn-heading);
 }
 
 .view-content .hljs-variable.language_,
 .view-content .hljs-subst {
-  color: #e06c75; /* Argumen variabel $VAR, ${VAR} -> Coral */
+  color: var(--danger);
 }
 
-/* Flag & opsi CLI (--flag, -f, options) */
 .view-content code.language-bash,
 .view-content code.language-sh,
 .view-content code.language-shell,
 .view-content code.language-zsh {
-  color: #abb2bf;
+  color: var(--fg);
 }
 
 /* Color Preview Swatch (Elemen pemicu) */

@@ -152,7 +152,7 @@ export const useVaultStore = defineStore('vault', () => {
     treeVersion.value++
   }
 
-  async function openVault(path: string) {
+  async function openVault(path: string, isProject?: boolean) {
     if (onSwitchHandlers.before) {
       await onSwitchHandlers.before()
     }
@@ -160,7 +160,7 @@ export const useVaultStore = defineStore('vault', () => {
     unlistenVaultChanged?.()
     unlistenVaultChanged = null
     try {
-      const info = await ipc.vaultOpen(path)
+      const info = await ipc.vaultOpen(path, isProject)
       current.value = info
       recentVaults.value = await ipc.vaultListRecent()
       resetVaultState()

@@ -32,13 +32,12 @@ pub fn validate_rel(raw: &str) -> Result<String, AppError> {
 }
 
 fn path_starts_with(child: &Path, parent: &Path) -> bool {
-    let child_str = child.to_string_lossy().replace('/', "\\");
-    let parent_str = parent.to_string_lossy().replace('/', "\\");
-    let clean_child = child_str.trim_start_matches(r"\\?\");
-    let clean_parent = parent_str.trim_start_matches(r"\\?\");
-
     #[cfg(windows)]
     {
+        let child_str = child.to_string_lossy().replace('/', "\\");
+        let parent_str = parent.to_string_lossy().replace('/', "\\");
+        let clean_child = child_str.trim_start_matches(r"\\?\");
+        let clean_parent = parent_str.trim_start_matches(r"\\?\");
         // Komparasi berbasis komponen path (bukan substring murni) agar "C:\foobar" tidak cocok dengan "C:\foo"
         let child_p = Path::new(&clean_child);
         let parent_p = Path::new(&clean_parent);
@@ -58,9 +57,7 @@ fn path_starts_with(child: &Path, parent: &Path) -> bool {
     }
     #[cfg(not(windows))]
     {
-        let child_p = Path::new(clean_child);
-        let parent_p = Path::new(clean_parent);
-        child_p.starts_with(parent_p)
+        child.starts_with(parent)
     }
 }
 

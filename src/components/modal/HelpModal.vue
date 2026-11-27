@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { modKey, altKey, delKey } from '@/lib/platform'
 import {
   X,
   HelpCircle,
@@ -12,7 +13,7 @@ import {
 } from 'lucide-vue-next'
 import { getVersion } from '@tauri-apps/api/app'
 import { openUrl } from '@tauri-apps/plugin-opener'
-import { t } from '@/lib/i18n/id'
+import { t } from '@/lib/i18n'
 import { APP_NAME, APP_VERSION, APP_GITHUB_URL } from '@/lib/constants'
 import { useUpdater } from '@/composables/useUpdater'
 import { useToastStore } from '@/stores/toast'
@@ -43,30 +44,30 @@ onMounted(async () => {
   }
 })
 
-const shortcuts = [
-  { key: 'Ctrl + N', desc: 'Catatan baru di folder aktif' },
-  { key: 'Ctrl + T', desc: 'Buka tab baru' },
-  { key: 'Ctrl + W', desc: 'Tutup tab aktif' },
-  { key: 'Ctrl + B', desc: 'Tampilkan / sembunyikan sidebar kiri' },
-  { key: 'Ctrl + Alt + \\', desc: 'Tampilkan / sembunyikan outline kanan' },
-  { key: 'Ctrl + E', desc: 'Beralih antara mode Tulis (Edit) & Baca (View)' },
-  { key: 'Ctrl + Shift + C', desc: 'Salin seluruh isi catatan aktif (AI Agent ready)' },
-  { key: 'Ctrl + Shift + F', desc: 'Pencarian global di semua catatan (Find in Files)' },
-  { key: 'Ctrl + Shift + T', desc: 'Tampilkan / sembunyikan format toolbar' },
-  { key: 'Ctrl + O', desc: 'Quick Switcher (cari & lompat antar catatan)' },
-  { key: 'Ctrl + ,', desc: 'Buka pengaturan aplikasi' },
-  { key: 'F2', desc: 'Ganti nama file / folder di sidebar' },
-  { key: 'Delete', desc: 'Hapus file / folder terpilih ke Trash' },
-]
+const shortcuts = computed(() => [
+  { key: `${modKey} + N`, desc: t.shortcutNewNote },
+  { key: `${modKey} + T`, desc: t.shortcutNewTab },
+  { key: `${modKey} + W`, desc: t.shortcutCloseTab },
+  { key: `${modKey} + B`, desc: t.shortcutToggleSidebar },
+  { key: `${modKey} + ${altKey} + \\`, desc: t.shortcutToggleOutline },
+  { key: `${modKey} + E`, desc: t.shortcutToggleMode },
+  { key: `${modKey} + Shift + C`, desc: t.shortcutCopyNote },
+  { key: `${modKey} + Shift + F`, desc: t.shortcutSearchVault },
+  { key: `${modKey} + Shift + T`, desc: t.shortcutToggleToolbar },
+  { key: `${modKey} + O`, desc: t.shortcutQuickSwitcher },
+  { key: `${modKey} + ,`, desc: t.shortcutSettings },
+  { key: 'F2', desc: t.shortcutRename },
+  { key: delKey, desc: t.shortcutDelete },
+])
 
-const mdTips = [
-  { syntax: '# Heading 1 ... ###### Heading 6', desc: 'Judul dokumen & sub-bagian' },
-  { syntax: '**teks tebal** dan *teks miring*', desc: 'Penekanan teks inline' },
-  { syntax: '- [ ] Tugas baru / - [x] Selesai', desc: 'Daftar tugas interaktif (bisa diklik di mode View)' },
-  { syntax: '[[Nama Catatan]]', desc: 'Tautan internal (WikiLinks) ke catatan lain' },
-  { syntax: '#ff4400 atau rgb(255, 68, 0)', desc: 'Auto-deteksi swatch warna (hover pratinjau, klik salin)' },
-  { syntax: '```rust / ```js', desc: 'Blok kode dengan tombol salin instan' },
-]
+const mdTips = computed(() => [
+  { syntax: '# Heading 1 ... ###### Heading 6', desc: t.mdTipHeading },
+  { syntax: '**teks tebal** dan *teks miring*', desc: t.mdTipEmphasis },
+  { syntax: '- [ ] Tugas baru / - [x] Selesai', desc: t.mdTipTask },
+  { syntax: '[[Nama Catatan]]', desc: t.mdTipWikilink },
+  { syntax: '#ff4400 atau rgb(255, 68, 0)', desc: t.mdTipColor },
+  { syntax: '```rust / ```js', desc: t.mdTipCode },
+])
 
 async function handleCheckUpdate() {
   if (isChecking.value || isDownloading.value) return
@@ -95,6 +96,10 @@ async function handleDownloadUpdate() {
 
 async function openGithub() {
   await openUrl(APP_GITHUB_URL)
+}
+
+async function openLicense() {
+  await openUrl(`${APP_GITHUB_URL}/blob/main/LICENSE`)
 }
 
 function formatDate(dateStr: string): string {
@@ -137,7 +142,7 @@ function formatDate(dateStr: string): string {
           type="button"
           :class="[
             'py-2.5 border-b-2 transition-colors cursor-pointer outline-none flex items-center gap-1.5',
-            activeTab === 'about' ? 'border-accent text-accent' : 'border-transparent text-fg-muted hover:text-fg',
+            activeTab === 'about' ? 'border-accent text-accent' : 'border-transparent text-fg/80 hover:text-fg',
           ]"
           @click="activeTab = 'about'"
         >
@@ -148,7 +153,7 @@ function formatDate(dateStr: string): string {
           type="button"
           :class="[
             'py-2.5 border-b-2 transition-colors cursor-pointer outline-none flex items-center gap-1.5',
-            activeTab === 'shortcuts' ? 'border-accent text-accent' : 'border-transparent text-fg-muted hover:text-fg',
+            activeTab === 'shortcuts' ? 'border-accent text-accent' : 'border-transparent text-fg/80 hover:text-fg',
           ]"
           @click="activeTab = 'shortcuts'"
         >
@@ -159,7 +164,7 @@ function formatDate(dateStr: string): string {
           type="button"
           :class="[
             'py-2.5 border-b-2 transition-colors cursor-pointer outline-none flex items-center gap-1.5',
-            activeTab === 'markdown' ? 'border-accent text-accent' : 'border-transparent text-fg-muted hover:text-fg',
+            activeTab === 'markdown' ? 'border-accent text-accent' : 'border-transparent text-fg/80 hover:text-fg',
           ]"
           @click="activeTab = 'markdown'"
         >
@@ -176,16 +181,12 @@ function formatDate(dateStr: string): string {
             <img src="/logo.png" alt="Logo" class="h-14 w-14 rounded-lg drop-shadow-sm" />
             <div>
               <h3 class="text-sm font-bold text-fg">{{ APP_NAME }}</h3>
-              <p class="text-fg-muted text-[11px] mt-0.5">Version {{ currentVersion }}</p>
+              <p class="text-fg/80 text-xs mt-0.5">Version {{ currentVersion }}</p>
             </div>
 
-            <p class="text-xs text-fg-muted text-center max-w-sm mt-4 leading-relaxed">
-              Aplikasi catatan Markdown ringan bergaya Obsidian. Tulis, kelola, dan atur catatan Anda dengan mudah.
+            <p class="text-xs text-fg/90 text-center max-w-md mt-4 leading-relaxed">
+              {{ t.appDescription }}
             </p>
-
-            <div class="text-[11px] text-fg-faint mt-3 space-y-0.5">
-              <p>Dibuat dengan Vue 3 · Tauri 2 · TypeScript</p>
-            </div>
 
             <!-- Minimalist Update & Github Actions -->
             <div class="flex flex-col items-center gap-1.5 pt-1 text-xs">
@@ -216,7 +217,7 @@ function formatDate(dateStr: string): string {
 
                 <button
                   type="button"
-                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-line bg-panel-alt hover:bg-hover text-fg-muted hover:text-fg transition-colors cursor-pointer outline-none"
+                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-line bg-panel-alt hover:bg-hover text-fg/85 hover:text-fg transition-colors cursor-pointer outline-none"
                   @click="openGithub"
                 >
                   <ExternalLink class="h-3 w-3" />
@@ -238,8 +239,16 @@ function formatDate(dateStr: string): string {
             </div>
           </div>
 
-          <div class="text-[11px] text-fg-faint border-t border-line/60 pt-3 w-full">
-            <p>{{ t.copyrightText }}</p>
+          <div class="text-xs text-fg/70 border-t border-line/60 pt-3 w-full flex items-center justify-center gap-1.5">
+            <span>{{ t.copyrightText }}</span>
+            <span>·</span>
+            <button
+              type="button"
+              class="text-accent hover:underline cursor-pointer outline-none"
+              @click="openLicense"
+            >
+              {{ t.licenseLabel }}
+            </button>
           </div>
         </div>
 
@@ -250,7 +259,7 @@ function formatDate(dateStr: string): string {
             :key="item.key"
             class="flex items-center justify-between py-1.5 px-2.5 rounded-sm bg-panel-alt/60 hover:bg-panel-alt border border-line/50"
           >
-            <span class="text-fg-muted text-xs">{{ item.desc }}</span>
+            <span class="text-fg/90 text-xs">{{ item.desc }}</span>
             <kbd class="px-2 py-0.5 rounded bg-app border border-line text-[11px] font-mono text-accent font-semibold shadow-xs">
               {{ item.key }}
             </kbd>

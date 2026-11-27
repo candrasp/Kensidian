@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { shallowRef, watch, onMounted, onUnmounted } from 'vue'
+import { computed, shallowRef, watch, onMounted, onUnmounted } from 'vue'
 import { EditorView } from '@codemirror/view'
 import { openSearchPanel } from '@codemirror/search'
 import { useVaultStore } from '@/stores/vault'
@@ -29,6 +29,8 @@ const vaultStore = useVaultStore()
 const uiStore = useUiStore()
 const tabsStore = useTabsStore()
 const toastStore = useToastStore()
+
+const isNoteActive = computed(() => Boolean(tabsStore.activePath && tabsStore.activePath !== PROJECT_DASHBOARD_PATH))
 
 const maxLeftSidebar = () => Math.min(480, window.innerWidth - 420)
 const maxRightSidebar = () => Math.min(480, window.innerWidth - 420)
@@ -127,20 +129,20 @@ watch(
         </div>
 
         <StatusBar
-          :visible="Boolean(tabsStore.activePath && tabsStore.activePath !== PROJECT_DASHBOARD_PATH)"
+          :visible="isNoteActive"
           :char-count="tabsStore.activeContent.length"
           :word-count="tabsStore.activeContent.trim() ? tabsStore.activeContent.trim().split(/\s+/).length : 0"
         />
       </main>
 
       <ResizeHandle
-        v-if="uiStore.rightSidebarVisible"
+        v-if="uiStore.rightSidebarVisible && isNoteActive"
         side="right" :min="200" :max="maxRightSidebar" :current-width="uiStore.rightSidebarWidth"
         @update="uiStore.setRightSidebarWidth" @commit="uiStore.setRightSidebarWidth" @reset="uiStore.resetRightSidebarWidth"
       />
 
       <RightSidebar
-        v-if="uiStore.rightSidebarVisible"
+        v-if="uiStore.rightSidebarVisible && isNoteActive"
         :content="tabsStore.activePath ? tabsStore.activeContent : ''"
         @select-heading="handleScrollToHeading"
       />

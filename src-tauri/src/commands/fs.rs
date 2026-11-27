@@ -4,10 +4,106 @@ use crate::models::FileEntry;
 use crate::state::AppState;
 use crate::vault::paths::{resolve, validate_rel};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
 use tauri::{AppHandle, State};
 use tauri_plugin_opener::OpenerExt;
+
+const PROJECT_SCAN_MAX_DEPTH: usize = 8;
+
+fn dir_has_md(dir: &Path, depth: usize) -> bool {
+    if depth > PROJECT_SCAN_MAX_DEPTH {
+        return false;
+    }
+    let Ok(read_dir) = fs::read_dir(dir) else {
+        return false;
+    };
+    for entry in read_dir.flatten() {
+        let name = entry.file_name().to_string_lossy().to_string();
+        if name.starts_with('.') || IGNORED_DIRS.contains(&name.as_str()) {
+            continue;
+        }
+        let Ok(ft) = entry.file_type() else { continue };
+        if ft.is_symlink() {
+            continue;
+        }
+        if ft.is_file() && name.ends_with(".md") {
+            return true;
+        }
+        if ft.is_dir() && dir_has_md(&entry.path(), depth + 1) {
+            return true;
+        }
+    }
+    false
+}
+
+fn should_show_project_dir(dir: &Path) -> bool {
+    let Ok(mut read_dir) = fs::read_dir(dir) else {
+        return false;
+    };
+    // Folder yang benar-benar kosong tetap tampil agar folder baru buatan user tidak hilang.
+    if read_dir.next().is_none() {
+        return true;
+    }
+    dir_has_md(dir, 0)
+}
+
+fn build_file_entry(
+    entry: &fs::DirEntry,
+    rel_path: String,
+    name: String,
+    is_dir: bool,
+) -> Result<FileEntry, AppError> {
+    let metadata = entry.metadata().map_err(AppError::from)?;
+    let mtime = metadata
+        .modified()
+        .unwrap_or(UNIX_EPOCH)
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis() as i64)
+        .unwrap_or(0);
+
+    Ok(FileEntry {
+        path: rel_path,
+        name,
+        kind: if is_dir { "folder".into() } else { "file".into() },
+        mtime,
+        size: if is_dir { 0 } else { metadata.len() },
+    })
+}
+
+fn list_dir_sync(
+    target_dir: PathBuf,
+    path: String,
+    is_project: bool,
+) -> Result<Vec<FileEntry>, AppError> {
+    if !target_dir.exists() || !target_dir.is_dir() {
+        return Err(AppError::NotFound("directory not found".into()));
+    }
+
+    let mut entries = Vec::new();
+    for entry in fs::read_dir(&target_dir).map_err(AppError::from)?.flatten() {
+        let name = entry.file_name().to_string_lossy().to_string();
+        if name.starts_with('.') || IGNORED_DIRS.contains(&name.as_str()) {
+            continue;
+        }
+        let Ok(ft) = entry.file_type() else { continue };
+        let is_dir = ft.is_dir();
+        if !is_dir && !name.ends_with(".md") {
+            continue;
+        }
+        if is_dir && is_project && !should_show_project_dir(&entry.path()) {
+            continue;
+        }
+        let rel_path = if path.is_empty() {
+            name.clone()
+        } else {
+            format!("{}/{}", path, name)
+        };
+        entries.push(build_file_entry(&entry, rel_path, name, is_dir)?);
+    }
+
+    Ok(entries)
+}
 
 #[tauri::command]
 pub async fn fs_list_dir(
@@ -16,60 +112,12 @@ pub async fn fs_list_dir(
 ) -> Result<Vec<FileEntry>, IpcError> {
     let session = state.get_session()?;
     let target_dir = resolve(&session, &path)?;
+    let is_project = session.info.is_project;
 
-    if !target_dir.exists() || !target_dir.is_dir() {
-        return Err(AppError::NotFound("directory not found".into()).into());
-    }
-
-    let mut entries = Vec::new();
-    let read_dir = fs::read_dir(&target_dir).map_err(AppError::from)?;
-
-    for entry in read_dir.flatten() {
-        let file_name = entry.file_name().to_string_lossy().to_string();
-        if file_name.starts_with('.') || IGNORED_DIRS.contains(&file_name.as_str()) {
-            continue;
-        }
-
-        let file_type = match entry.file_type() {
-            Ok(ft) => ft,
-            Err(_) => continue,
-        };
-
-        let is_dir = file_type.is_dir();
-        let is_md = file_name.ends_with(".md");
-
-        if !is_dir && !is_md {
-            continue;
-        }
-
-        let metadata = entry.metadata().map_err(AppError::from)?;
-        let mtime = metadata
-            .modified()
-            .unwrap_or(UNIX_EPOCH)
-            .duration_since(UNIX_EPOCH)
-            .map(|d| d.as_millis() as i64)
-            .unwrap_or(0);
-
-        let rel_path = if path.is_empty() {
-            file_name.clone()
-        } else {
-            format!("{}/{}", path, file_name)
-        };
-
-        entries.push(FileEntry {
-            path: rel_path,
-            name: file_name,
-            kind: if is_dir {
-                "folder".into()
-            } else {
-                "file".into()
-            },
-            mtime,
-            size: if is_dir { 0 } else { metadata.len() },
-        });
-    }
-
-    Ok(entries)
+    tokio::task::spawn_blocking(move || list_dir_sync(target_dir, path, is_project))
+        .await
+        .map_err(|e| IpcError::from(AppError::Io(e.to_string())))?
+        .map_err(IpcError::from)
 }
 
 #[tauri::command]

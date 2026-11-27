@@ -15,6 +15,13 @@ jobs:
         include:
           - platform: "windows-latest"
             args: ""
+            rust_targets: ""
+          - platform: "ubuntu-22.04"
+            args: ""
+            rust_targets: ""
+          - platform: "macos-latest"
+            args: "--target universal-apple-darwin"
+            rust_targets: "aarch64-apple-darwin,x86_64-apple-darwin"
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -27,46 +34,44 @@ jobs:
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_targets }}
 
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: 'src-tauri'
 
+      - name: Install Linux system dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev build-essential libxdo-dev
+
       - name: Install frontend dependencies
         run: bun install
 
       - name: Extract Changelog
         id: changelog
-        shell: pwsh
         run: |
-          $version = $env:GITHUB_REF_NAME -replace '^v', ''
-          $lines = Get-Content CHANGELOG.md -Encoding UTF8
-          $capture = $false
-          $result = @()
-
-          foreach ($line in $lines) {
-            if ($line -match "^## \[$([regex]::Escape($version))\]") {
-              $capture = $true
-              continue
-            }
-            if ($capture -and $line -match '^## \[') {
-              break
-            }
-            if ($capture) {
-              $result += $line
-            }
+          bun -e '
+          import fs from "node:fs";
+          import crypto from "node:crypto";
+          const tag = process.env.GITHUB_REF_NAME || "";
+          const version = tag.replace(/^v/, "");
+          const lines = fs.readFileSync("CHANGELOG.md", "utf8").split(/\r?\n/);
+          const headerRe = new RegExp("^## \\[" + version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\]");
+          let capture = false;
+          const result = [];
+          for (const line of lines) {
+            if (headerRe.test(line)) { capture = true; continue; }
+            if (capture && /^## \[/.test(line)) break;
+            if (capture) result.push(line);
           }
-
-          if ($result.Count -eq 0) {
-            $result = @("Pembaruan Kensidian versi $version")
-          }
-
-          $content = ($result -join "`n").Trim()
-          $delimiter = "EOF_" + [guid]::NewGuid().ToString("N")
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "notes<<$delimiter" -Encoding UTF8
-          Add-Content -Path $env:GITHUB_OUTPUT -Value $content -Encoding UTF8
-          Add-Content -Path $env:GITHUB_OUTPUT -Value $delimiter -Encoding UTF8
+          const notes = result.join("\n").trim() || `Pembaruan Kensidian versi ${version}`;
+          const delim = "EOF_" + crypto.randomUUID().replace(/-/g, "");
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `notes<<${delim}\n${notes}\n${delim}\n`, "utf8");
+          '
 
       - name: Build & Release Tauri App
         uses: tauri-apps/tauri-action@v0
@@ -78,6 +83,17 @@ jobs:
           tagName: v__VERSION__
           releaseName: "Kensidian v__VERSION__"
           releaseBody: ${{ steps.changelog.outputs.notes }}
-          releaseDraft: false
+          releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+
+  publish-release:
+    needs: publish-tauri
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release edit "${{ github.ref_name }}" --repo "${{ github.repository }}" --draft=false

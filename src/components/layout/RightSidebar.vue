@@ -2,6 +2,7 @@
 import { ListOrdered, PanelRight } from 'lucide-vue-next'
 import { useUiStore } from '@/stores/ui'
 import { t } from '@/lib/i18n/id'
+import { modKey, altKey, fmt } from '@/lib/platform'
 import IconButton from '@/components/ui/IconButton.vue'
 import OutlinePane from '@/components/editor/OutlinePane.vue'
 import type { HeadingItem } from '@/lib/markdown/render'
@@ -29,7 +30,7 @@ const uiStore = useUiStore()
       </div>
       <IconButton
         :icon="PanelRight"
-        :label="t.hideRightSidebar"
+        :label="`${t.hideRightSidebar} (${fmt(modKey, altKey, '\\')})`"
         :active="true"
         @click="uiStore.toggleRightSidebar"
       />

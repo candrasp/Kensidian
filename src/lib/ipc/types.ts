@@ -49,7 +49,11 @@ export interface GitStatus {
   lastCommit?: GitCommitInfo | null
   ahead: number
   behind: number
+  remoteUrl?: string | null
+  hasGitignore: boolean
+  unignoredHeavyDirs: string[]
 }
+export interface IdeInfo { id: string; name: string }
 export interface FileEntry { path: string; name: string; kind: 'file' | 'folder'; mtime: number; size: number }
 export interface NoteRef { path: string; name: string; mtime: number }
 export interface NoteContent { content: string; mtime: number; size: number }

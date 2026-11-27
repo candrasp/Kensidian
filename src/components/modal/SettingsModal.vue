@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { X, Moon, Sun, Monitor, Type, Layout, Palette } from 'lucide-vue-next'
+import { X, Moon, Sun, Monitor, Type, Layout, Palette, Languages } from 'lucide-vue-next'
 import { useSettingsStore, type ColorScheme } from '@/stores/settings'
-import { t } from '@/lib/i18n/id'
+import { t, type Locale } from '@/lib/i18n'
 
 const emit = defineEmits<{
   (e: 'close'): void
@@ -11,11 +11,16 @@ const emit = defineEmits<{
 const settingsStore = useSettingsStore()
 const current = computed(() => settingsStore.current)
 
-const themeOptions = [
+const languageOptions = computed<{ value: Locale; label: string }[]>(() => [
+  { value: 'id', label: t.langId },
+  { value: 'en', label: t.langEn },
+])
+
+const themeOptions = computed(() => [
   { value: 'dark', label: t.themeDark, icon: Moon },
   { value: 'light', label: t.themeLight, icon: Sun },
   { value: 'system', label: t.themeSystem, icon: Monitor },
-] as const
+] as const)
 
 const schemeOptions: { value: ColorScheme; label: string }[] = [
   { value: 'nord', label: 'Nord Dark' },
@@ -26,26 +31,26 @@ const schemeOptions: { value: ColorScheme; label: string }[] = [
   { value: 'sepia', label: 'Warm Sepia' },
 ]
 
-const fontOptions = [
+const fontOptions = computed(() => [
   { value: '', label: t.fontDefault },
   { value: '"Inter Variable", Inter, sans-serif', label: t.fontInter },
   { value: '"Plus Jakarta Sans", sans-serif', label: t.fontJakarta },
   { value: '"Source Sans 3", sans-serif', label: t.fontSourceSans },
   { value: 'Merriweather, Georgia, serif', label: t.fontSerif },
   { value: '"JetBrains Mono", monospace', label: t.fontMono },
-]
+])
 
-const fontMonoOptions = [
+const fontMonoOptions = computed(() => [
   { value: '', label: t.fontDefault },
   { value: '"JetBrains Mono", monospace', label: t.fontMono },
   { value: '"Fira Code", Consolas, monospace', label: t.fontFira },
   { value: 'Consolas, "SF Mono", monospace', label: t.fontConsolas },
-]
+])
 
-const modeOptions = [
+const modeOptions = computed(() => [
   { value: 'view', label: t.defaultModeView },
   { value: 'edit', label: t.defaultModeEdit },
-] as const
+] as const)
 </script>
 
 <template>
@@ -66,6 +71,30 @@ const modeOptions = [
       </div>
 
       <div class="p-4 flex flex-col gap-4 text-xs max-h-[75vh] overflow-y-auto">
+        <!-- Bahasa Antarmuka -->
+        <div class="flex flex-col gap-1.5">
+          <label class="font-medium text-fg flex items-center gap-1.5">
+            <Languages class="h-3.5 w-3.5 text-accent" :stroke-width="1.75" />
+            {{ t.languageLabel }}
+          </label>
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              v-for="opt in languageOptions"
+              :key="opt.value"
+              type="button"
+              :class="[
+                'flex items-center justify-center py-1.5 px-2 rounded-sm border text-xs cursor-pointer transition-colors',
+                (current.language || 'id') === opt.value
+                  ? 'border-accent bg-accent-soft text-fg font-medium'
+                  : 'border-line bg-panel text-fg-muted hover:bg-hover hover:text-fg',
+              ]"
+              @click="settingsStore.update({ language: opt.value })"
+            >
+              {{ opt.label }}
+            </button>
+          </div>
+        </div>
+
         <!-- Tema Tampilan -->
         <div class="flex flex-col gap-1.5">
           <label class="font-medium text-fg flex items-center gap-1.5">

@@ -5,6 +5,7 @@ import {
   ArrowUpDown,
   ChevronsDownUp,
   Check,
+  Cloud,
 } from 'lucide-vue-next'
 import {
   DropdownMenuRoot,
@@ -14,9 +15,10 @@ import {
   DropdownMenuItem,
 } from 'reka-ui'
 import { useVaultStore } from '@/stores/vault'
-import { t } from '@/lib/i18n/id'
+import { t } from '@/lib/i18n'
 import type { SortOrder } from '@/lib/ipc/types'
 import IconButton from '@/components/ui/IconButton.vue'
+import Tooltip from '@/components/ui/Tooltip.vue'
 
 const vaultStore = useVaultStore()
 
@@ -38,9 +40,15 @@ async function handleNewFolder() {
 
 <template>
   <div class="flex h-9 items-center justify-between px-2.5 border-b border-line bg-panel shrink-0 select-none">
-    <span class="text-xs font-semibold text-fg truncate">
-      {{ vaultStore.current?.name ?? t.untitled }}
-    </span>
+    <Tooltip :content="t.syncR2" side="bottom" align="start">
+      <button
+        type="button"
+        class="flex items-center gap-1.5 rounded-sm px-1.5 py-1 text-xs text-fg-muted hover:bg-hover hover:text-fg transition-colors cursor-pointer outline-none min-w-0"
+      >
+        <Cloud class="h-3.5 w-3.5 shrink-0" :stroke-width="1.75" />
+        <span class="truncate">{{ t.syncStatusLocal }}</span>
+      </button>
+    </Tooltip>
 
     <div class="flex items-center gap-0.5">
       <IconButton :icon="SquarePen" :label="t.newNote" @click="handleNewNote" />

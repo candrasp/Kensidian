@@ -1,10 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { NoteMode } from '@/lib/ipc/types'
+import { setLocale, type Locale } from '@/lib/i18n'
 
 export type ColorScheme = 'nord' | 'onedark' | 'minimal' | 'tokyonight' | 'catppuccin' | 'sepia'
 
 export interface Settings {
+  language: Locale
   theme: 'dark' | 'light' | 'system'
   colorScheme: ColorScheme
   accentColor: string | null
@@ -24,6 +26,7 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
+  language: 'id',
   theme: 'dark',
   colorScheme: 'nord',
   accentColor: null,
@@ -90,10 +93,12 @@ export const useSettingsStore = defineStore('settings', () => {
     applyFont(current.value.fontText)
     applyFontMono(current.value.fontMono)
     applyFontSize(current.value.fontSize)
+    setLocale(current.value.language ?? 'id')
   }
 
   async function update(partial: Partial<Settings>) {
     current.value = { ...current.value, ...partial }
+    if (partial.language) setLocale(partial.language)
     if (partial.theme) applyTheme(partial.theme)
     if (partial.colorScheme) applyColorScheme(partial.colorScheme)
     if (partial.fontText !== undefined) applyFont(partial.fontText)

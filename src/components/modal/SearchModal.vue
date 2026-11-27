@@ -45,7 +45,7 @@ async function performSearch() {
     results.value = hits
     selectedIndex.value = 0
   } catch (error: any) {
-    toastStore.error(error.message || 'Gagal melakukan pencarian')
+    toastStore.error(error.message || t.searchFailed)
     results.value = []
   } finally {
     isSearching.value = false
@@ -155,7 +155,7 @@ onUnmounted(() => {
 
       <!-- Results Count -->
       <div v-if="query.trim()" class="px-4 py-2 text-xs text-fg-muted border-b border-line bg-panel-alt/30 shrink-0">
-        <span v-if="isSearching">Mencari...</span>
+        <span v-if="isSearching">{{ t.searching }}</span>
         <span v-else-if="results.length > 0">{{ t.searchResults(results.length) }}</span>
         <span v-else>{{ t.noSearchResults }}</span>
       </div>
@@ -198,9 +198,9 @@ onUnmounted(() => {
 
       <!-- Footer Hint -->
       <div class="px-4 py-2 text-[11px] text-fg-faint border-t border-line bg-panel-alt/30 shrink-0 flex items-center gap-4">
-        <span><kbd class="px-1 py-0.5 rounded bg-app border border-line font-mono text-[10px] text-fg-muted">↑↓</kbd> Navigasi</span>
-        <span><kbd class="px-1 py-0.5 rounded bg-app border border-line font-mono text-[10px] text-fg-muted">Enter</kbd> Buka</span>
-        <span><kbd class="px-1 py-0.5 rounded bg-app border border-line font-mono text-[10px] text-fg-muted">Esc</kbd> Tutup</span>
+        <span><kbd class="px-1 py-0.5 rounded bg-app border border-line font-mono text-[10px] text-fg-muted">↑↓</kbd> {{ t.navHint }}</span>
+        <span><kbd class="px-1 py-0.5 rounded bg-app border border-line font-mono text-[10px] text-fg-muted">Enter</kbd> {{ t.openHint }}</span>
+        <span><kbd class="px-1 py-0.5 rounded bg-app border border-line font-mono text-[10px] text-fg-muted">Esc</kbd> {{ t.close }}</span>
       </div>
     </div>
   </div>

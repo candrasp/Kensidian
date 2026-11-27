@@ -12,6 +12,7 @@ import type {
   SyncConfigInput,
   SyncStatus,
   GitStatus,
+  IdeInfo,
 } from './types'
 import { invoke } from '@tauri-apps/api/core'
 import type { Settings } from '@/stores/settings'
@@ -22,7 +23,7 @@ export const tauriIpc = {
   vaultListRecent: () => invoke<VaultInfo[]>('vault_list_recent'),
   vaultRemoveRecent: (path: string) => invoke<VaultInfo[]>('vault_remove_recent', { path }),
   vaultGetCurrent: () => invoke<VaultInfo | null>('vault_get_current'),
-  vaultOpen: (path: string) => invoke<VaultInfo>('vault_open', { path }),
+  vaultOpen: (path: string, isProject?: boolean) => invoke<VaultInfo>('vault_open', { path, isProject }),
   vaultCreate: (parentPath: string, name: string) => invoke<VaultInfo>('vault_create', { parentPath, name }),
   vaultClose: () => invoke<void>('vault_close'),
   vaultConfigLoad: () => invoke<VaultConfig>('vault_config_load'),
@@ -45,7 +46,10 @@ export const tauriIpc = {
   searchInVault: (query: string, useRegex: boolean, caseSensitive: boolean) =>
     invoke<SearchHit[]>('search_in_vault', { query, useRegex, caseSensitive }),
   projectGetGitStatus: () => invoke<GitStatus>('project_get_git_status'),
+  projectInitGit: () => invoke<void>('project_init_git'),
   projectOpenTerminal: () => invoke<void>('project_open_terminal'),
+  projectDetectIdes: () => invoke<IdeInfo[]>('project_detect_ides'),
+  projectOpenIde: (ideId: string) => invoke<void>('project_open_ide', { ideId }),
   backlinksGet: (path: string) => invoke<BacklinkRef[]>('backlinks_get', { path }),
   backlinksCount: (path: string) => invoke<number>('backlinks_count', { path }),
   syncConfigLoad: () => invoke<SyncConfig>('sync_config_load'),

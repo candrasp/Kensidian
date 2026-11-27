@@ -50,9 +50,9 @@ export const mockIpc = {
     await delay()
     return currentVault
   },
-  vaultOpen: async (path: string): Promise<VaultInfo> => {
+  vaultOpen: async (path: string, isProject?: boolean): Promise<VaultInfo> => {
     await delay()
-    currentVault = { path, name: path.split('/').pop() || 'Vault' }
+    currentVault = { path, name: path.split('/').pop() || 'Vault', isProject: Boolean(isProject) }
     return currentVault
   },
   vaultCreate: async (parentPath: string, name: string): Promise<VaultInfo> => {
@@ -255,7 +255,15 @@ export const mockIpc = {
       },
       ahead: 1,
       behind: 0,
+      hasGitignore: true,
+      unignoredHeavyDirs: [],
     }
   },
   projectOpenTerminal: async (): Promise<void> => {},
+  projectInitGit: async (): Promise<void> => {},
+  projectDetectIdes: async () => [
+    { id: 'agy', name: 'Antigravity' },
+    { id: 'code', name: 'VS Code' },
+  ],
+  projectOpenIde: async (): Promise<void> => {},
 }

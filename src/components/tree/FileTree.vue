@@ -6,6 +6,7 @@ import { useVaultStore } from '@/stores/vault'
 import { useTabsStore } from '@/stores/tabs'
 import { useToastStore } from '@/stores/toast'
 import { t } from '@/lib/i18n/id'
+import { isMac } from '@/lib/platform'
 import type { FileEntry } from '@/lib/ipc/types'
 import FileTreeItem from './FileTreeItem.vue'
 import IconColorModal from '@/components/modal/IconColorModal.vue'
@@ -168,7 +169,8 @@ function handleKeydown(e: KeyboardEvent) {
     e.preventDefault(); selectAll(allVisiblePaths.value)
   } else if (e.key === 'F2' && vaultStore.selectedPath) {
     renamingPath.value = vaultStore.selectedPath
-  } else if (e.key === 'Delete') {
+  } else if (e.key === 'Delete' || (isMac && e.metaKey && e.key === 'Backspace')) {
+    e.preventDefault()
     const list = selectedPaths.value.size > 0 ? Array.from(selectedPaths.value) : vaultStore.selectedPath ? [vaultStore.selectedPath] : []
     promptDelete(list)
   }

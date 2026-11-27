@@ -17,6 +17,7 @@ import { useToastStore } from '@/stores/toast'
 import { ipc } from '@/lib/ipc'
 import { PROJECT_DASHBOARD_PATH } from '@/lib/constants'
 import { t } from '@/lib/i18n/id'
+import { modKey, altKey, fmt } from '@/lib/platform'
 import IconButton from '@/components/ui/IconButton.vue'
 import Tooltip from '@/components/ui/Tooltip.vue'
 import TabItem from './TabItem.vue'
@@ -153,14 +154,14 @@ const itemClass = 'rounded-sm px-2 py-1.5 hover:bg-hover cursor-pointer outline-
       </DropdownMenuRoot>
 
       <div class="mb-0.5 ml-0.5">
-        <IconButton :icon="Plus" :label="`${t.newTab} (Ctrl+T)`" @click="$emit('new-tab')" />
+        <IconButton :icon="Plus" :label="`${t.newTab} (${fmt(modKey, 'T')})`" @click="$emit('new-tab')" />
       </div>
     </div>
 
     <div class="ml-auto flex items-center gap-0.5 shrink-0 mb-0.5">
       <!-- Tombol dokumen aktif: Salin, Edit/View, More, PanelRight -->
       <template v-if="tabsStore.activePath && tabsStore.activePath !== PROJECT_DASHBOARD_PATH">
-        <Tooltip :content="`${t.copyNoteContent} (Ctrl+Shift+C)`" side="bottom">
+        <Tooltip :content="`${t.copyNoteContent} (${fmt(modKey, 'Shift', 'C')})`" side="bottom">
           <button
             type="button"
             :class="[
@@ -172,13 +173,13 @@ const itemClass = 'rounded-sm px-2 py-1.5 hover:bg-hover cursor-pointer outline-
             @click="handleCopyNote"
           >
             <Check v-if="isCopied" class="h-3 w-3 text-emerald-400" :stroke-width="2" />
-            <span>{{ isCopied ? 'Tersalin' : 'Salin' }}</span>
+            <span>{{ isCopied ? t.copiedLabel : t.copy }}</span>
           </button>
         </Tooltip>
 
         <IconButton
           :icon="tabsStore.activeTab?.mode === 'edit' ? BookOpen : Pencil"
-          :label="`${tabsStore.activeTab?.mode === 'edit' ? t.toView : t.toEdit} (Ctrl+E)`"
+          :label="`${tabsStore.activeTab?.mode === 'edit' ? t.toView : t.toEdit} (${fmt(modKey, 'E')})`"
           @click="tabsStore.toggleMode()"
         />
 
@@ -211,15 +212,15 @@ const itemClass = 'rounded-sm px-2 py-1.5 hover:bg-hover cursor-pointer outline-
           </DropdownMenuPortal>
         </DropdownMenuRoot>
 
-        <div class="w-px h-4 bg-line mx-0.5 self-center" />
-      </template>
+        <div v-if="!uiStore.rightSidebarVisible" class="w-px h-4 bg-line mx-0.5 self-center" />
 
-      <IconButton
-        v-if="!uiStore.rightSidebarVisible"
-        :icon="PanelRight"
-        :label="t.showRightSidebar"
-        @click="uiStore.toggleRightSidebar"
-      />
+        <IconButton
+          v-if="!uiStore.rightSidebarVisible"
+          :icon="PanelRight"
+          :label="`${t.showRightSidebar} (${fmt(modKey, altKey, '\\')})`"
+          @click="uiStore.toggleRightSidebar"
+        />
+      </template>
     </div>
   </div>
 

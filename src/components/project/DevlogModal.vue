@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { X, BookOpen, Send, GitCommit, FileDiff } from 'lucide-vue-next'
+import { X, BookOpen, Send, GitCommit, FileDiff, Sparkles, Copy, Check } from 'lucide-vue-next'
 import { useVaultStore } from '@/stores/vault'
 import { useTabsStore } from '@/stores/tabs'
+import { useToastStore } from '@/stores/toast'
 import { ipc } from '@/lib/ipc'
 import type { GitStatus } from '@/lib/ipc/types'
+import { getTodayString, getTimeString, buildDevlogAgentPrompt } from '@/lib/projectDevlog'
+import { t } from '@/lib/i18n/id'
 
 const props = defineProps<{
   open: boolean
@@ -19,10 +22,25 @@ const emit = defineEmits<{
 
 const vaultStore = useVaultStore()
 const tabsStore = useTabsStore()
+const toastStore = useToastStore()
 
 const completedWork = ref('')
 const nextGoal = ref('')
 const isSubmitting = ref(false)
+const promptCopied = ref(false)
+
+async function handleCopyAgentPrompt() {
+  try {
+    await navigator.clipboard.writeText(buildDevlogAgentPrompt(props.branch))
+    promptCopied.value = true
+    toastStore.success(t.devlogPromptCopied)
+    setTimeout(() => {
+      promptCopied.value = false
+    }, 1800)
+  } catch {
+    toastStore.error(t.copyPromptFailed)
+  }
+}
 
 const hasGitRef = computed(() => {
   return Boolean(
@@ -50,19 +68,6 @@ function insertChangedFiles() {
   appendToCompleted(`Ubah: ${preview}${suffix}`)
 }
 
-function getTodayString(): string {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-function getTimeString(): string {
-  const now = new Date()
-  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-}
-
 async function handleSaveDevlog() {
   if (!completedWork.value.trim()) return
   isSubmitting.value = true
@@ -72,14 +77,12 @@ async function handleSaveDevlog() {
     const fileName = `${today}.md`
     const devlogPath = `devlog/${fileName}`
 
-    // 1. Pastikan folder devlog ada
     try {
       await ipc.fsCreateFolder('devlog')
     } catch {
       // Abaikan jika folder devlog sudah ada
     }
 
-    // 2. Baca file devlog yang ada atau buat baru
     let existingContent = ''
     let mtime = 0
     try {
@@ -129,7 +132,7 @@ async function handleSaveDevlog() {
       <div class="flex items-center justify-between px-4 py-3 border-b border-line bg-panel">
         <div class="flex items-center gap-2">
           <BookOpen class="h-4 w-4 text-accent" :stroke-width="1.75" />
-          <h2 class="text-sm font-semibold text-fg">Catat Sesi Koding Hari Ini</h2>
+          <h2 class="text-sm font-semibold text-fg">{{ t.devlogModalTitle }}</h2>
         </div>
         <button
           type="button"
@@ -141,8 +144,24 @@ async function handleSaveDevlog() {
       </div>
 
       <div class="p-4 flex flex-col gap-3.5 text-xs">
+        <div class="flex items-center justify-between gap-3 rounded-sm border border-accent/35 bg-accent-soft px-3 py-2">
+          <div class="flex items-center gap-2 min-w-0">
+            <Sparkles class="h-3.5 w-3.5 text-accent shrink-0" :stroke-width="1.75" />
+            <span class="text-[11px] font-medium text-fg">{{ t.devlogAutoAi }}</span>
+          </div>
+          <button
+            type="button"
+            class="flex items-center gap-1.5 shrink-0 rounded-sm bg-accent px-2.5 py-1 text-[11px] font-medium text-accent-fg hover:bg-accent-hover transition-colors cursor-pointer"
+            @click="handleCopyAgentPrompt"
+          >
+            <Check v-if="promptCopied" class="h-3 w-3" :stroke-width="2" />
+            <Copy v-else class="h-3 w-3" :stroke-width="1.75" />
+            <span>{{ promptCopied ? t.copiedExclaim : t.copyPromptBtn }}</span>
+          </button>
+        </div>
+
         <p class="text-fg-muted">
-          Simpan ringkasan sesi sebelum beralih tugas agar tidak lupa sampai mana pekerjaanmu saat kembali.
+          {{ t.devlogModalDesc }}
         </p>
 
         <!-- Referensi Cepat Git -->
@@ -150,7 +169,7 @@ async function handleSaveDevlog() {
           v-if="hasGitRef"
           class="flex flex-col gap-1.5 rounded-sm border border-line/70 bg-panel p-2.5"
         >
-          <span class="text-[11px] font-medium text-fg-muted">Referensi Git (klik untuk sisipkan):</span>
+          <span class="text-[11px] font-medium text-fg-muted">{{ t.devlogGitRefLabel }}</span>
           <div class="flex flex-wrap gap-1.5">
             <button
               v-if="gitStatus?.lastCommit"
@@ -159,7 +178,7 @@ async function handleSaveDevlog() {
               @click="insertLastCommit"
             >
               <GitCommit class="h-3 w-3 text-accent shrink-0" :stroke-width="1.75" />
-              <span class="truncate">+ Commit: {{ gitStatus.lastCommit.message }}</span>
+              <span class="truncate">{{ t.devlogCommitPrefix(gitStatus.lastCommit.message) }}</span>
             </button>
             <button
               v-if="gitStatus?.uncommittedFiles && gitStatus.uncommittedFiles.length > 0"
@@ -168,27 +187,27 @@ async function handleSaveDevlog() {
               @click="insertChangedFiles"
             >
               <FileDiff class="h-3 w-3 text-amber-500 shrink-0" :stroke-width="1.75" />
-              <span>+ {{ gitStatus.uncommittedFiles.length }} file diubah</span>
+              <span>{{ t.devlogFilesChanged(gitStatus.uncommittedFiles.length) }}</span>
             </button>
           </div>
         </div>
 
         <div class="flex flex-col gap-1.5">
-          <label class="font-medium text-fg">Apa yang baru saja kamu selesaikan?</label>
+          <label class="font-medium text-fg">{{ t.devlogCompletedLabel }}</label>
           <textarea
             v-model="completedWork"
             rows="3"
-            placeholder="Contoh: Selesai implementasi endpoint auth dan penanganan token expired"
+            :placeholder="t.devlogCompletedPlaceholder"
             class="rounded-sm border border-line bg-panel p-2 text-fg focus:border-accent focus:outline-none resize-none text-xs"
           />
         </div>
 
         <div class="flex flex-col gap-1.5">
-          <label class="font-medium text-fg">Apa langkah pertama saat kembali nanti? (opsional)</label>
+          <label class="font-medium text-fg">{{ t.devlogNextLabel }}</label>
           <input
             v-model="nextGoal"
             type="text"
-            placeholder="Contoh: Lanjut buat unit test untuk middleware profile"
+            :placeholder="t.devlogNextPlaceholder"
             class="rounded-sm border border-line bg-panel px-2 py-1.5 text-fg focus:border-accent focus:outline-none text-xs"
           />
         </div>
@@ -199,7 +218,7 @@ async function handleSaveDevlog() {
             class="px-3 py-1.5 rounded-sm border border-line text-fg-muted hover:bg-hover hover:text-fg cursor-pointer transition-colors"
             @click="emit('close')"
           >
-            Batal
+            {{ t.cancel }}
           </button>
           <button
             type="button"
@@ -208,7 +227,7 @@ async function handleSaveDevlog() {
             @click="handleSaveDevlog"
           >
             <Send class="h-3.5 w-3.5" :stroke-width="1.75" />
-            <span>Simpan ke Devlog</span>
+            <span>{{ t.devlogSaveBtn }}</span>
           </button>
         </div>
       </div>

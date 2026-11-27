@@ -65,11 +65,34 @@ fn update_recent_vaults(app_state: &AppState, info: &VaultInfo) -> Result<(), Ap
     Ok(())
 }
 
+const PROJECT_MARKERS: &[&str] = &[
+    ".git",
+    "package.json",
+    "Cargo.toml",
+    "pyproject.toml",
+    "requirements.txt",
+    "go.mod",
+    "composer.json",
+    "pubspec.yaml",
+    "Gemfile",
+    "pom.xml",
+    "build.gradle",
+    "build.gradle.kts",
+    "CMakeLists.txt",
+    "Makefile",
+    "Package.swift",
+];
+
+fn detect_project_dir(path: &std::path::Path) -> bool {
+    PROJECT_MARKERS.iter().any(|marker| path.join(marker).exists())
+}
+
 #[tauri::command]
 pub async fn vault_open(
     app: AppHandle,
     state: State<'_, AppState>,
     path: String,
+    is_project: Option<bool>,
 ) -> Result<VaultInfo, IpcError> {
     let path_buf = PathBuf::from(&path);
     if !path_buf.exists() || !path_buf.is_dir() {
@@ -88,14 +111,23 @@ pub async fn vault_open(
         .trim_start_matches(r"\\?\")
         .to_string();
 
-    let is_project = path_buf.join(".git").exists()
-        || path_buf.join("package.json").exists()
-        || path_buf.join("Cargo.toml").exists();
+    let detected_project = detect_project_dir(&path_buf);
+    let config_path = path_buf.join(".kensidian").join("config.json");
+    let mut vault_config: crate::models::VaultConfig = if config_path.exists() {
+        fs::read_to_string(&config_path)
+            .ok()
+            .and_then(|s| serde_json::from_str(&s).ok())
+            .unwrap_or_default()
+    } else {
+        Default::default()
+    };
+
+    let final_is_project = is_project.unwrap_or(false) || vault_config.is_project || detected_project;
 
     let info = VaultInfo {
         path: clean_path.clone(),
         name,
-        is_project,
+        is_project: final_is_project,
     };
 
     // Gunakan PathBuf dari clean_path (tanpa UNC prefix) sebagai canonical_root
@@ -110,6 +142,13 @@ pub async fn vault_open(
     let kensidian_dir = session.kensidian_dir();
     if !kensidian_dir.exists() {
         fs::create_dir_all(&kensidian_dir).map_err(AppError::from)?;
+    }
+
+    if is_project == Some(true) && !vault_config.is_project {
+        vault_config.is_project = true;
+        if let Ok(json) = serde_json::to_string_pretty(&vault_config) {
+            let _ = crate::storage::atomic::atomic_write(&session.config_file(), json.as_bytes());
+        }
     }
 
     let assets_dir = kensidian_dir.join("assets");
@@ -199,7 +238,7 @@ pub async fn vault_create(
     }
 
     fs::create_dir_all(&new_dir).map_err(AppError::from)?;
-    vault_open(app, state, new_dir.to_string_lossy().to_string()).await
+    vault_open(app, state, new_dir.to_string_lossy().to_string(), None).await
 }
 
 #[tauri::command]
@@ -255,7 +294,7 @@ pub async fn vault_get_current(
 
     match target_path {
         Some(path) => {
-            let info = vault_open(app, state, path).await?;
+            let info = vault_open(app, state, path, None).await?;
             Ok(Some(info))
         }
         None => Ok(None),

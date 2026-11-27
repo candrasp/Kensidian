@@ -18,19 +18,19 @@ async function handleConfirmRemove() {
   }
 }
 
-async function handleOpenVault() {
+async function handleOpenVault(isProject = false) {
   if (isTauri) {
     const { open } = await import('@tauri-apps/plugin-dialog')
     const selected = await open({
       directory: true,
       multiple: false,
-      title: t.openVaultFolder,
+      title: isProject ? t.openProjectFolder : t.openVaultFolder,
     })
     if (selected && typeof selected === 'string') {
-      await vaultStore.openVault(selected)
+      await vaultStore.openVault(selected, isProject)
     }
   } else {
-    await vaultStore.openVault('/mock/vault')
+    await vaultStore.openVault('/mock/vault', isProject)
   }
 }
 
@@ -61,7 +61,7 @@ async function handleCreateVault() {
         <button
           type="button"
           class="flex items-center justify-center gap-2 rounded-sm bg-accent py-2 text-sm font-medium text-accent-fg hover:bg-accent-hover transition-colors duration-100 cursor-pointer"
-          @click="handleOpenVault"
+          @click="handleOpenVault(false)"
         >
           <FolderOpen class="h-4 w-4" :stroke-width="1.75" />
           {{ t.openVaultFolder }}
@@ -70,7 +70,7 @@ async function handleCreateVault() {
         <button
           type="button"
           class="flex items-center justify-center gap-2 rounded-sm border border-line bg-panel-alt py-2 text-sm font-medium text-fg hover:bg-hover transition-colors duration-100 cursor-pointer"
-          @click="handleOpenVault"
+          @click="handleOpenVault(true)"
         >
           <FolderGit2 class="h-4 w-4 text-accent" :stroke-width="1.75" />
           {{ t.openProjectFolder }}
@@ -103,7 +103,7 @@ async function handleCreateVault() {
             >
               <FolderGit2 v-if="v.isProject" class="h-3.5 w-3.5 text-accent shrink-0" :stroke-width="1.75" />
               <span>{{ v.name }}</span>
-              <span v-if="v.isProject" class="text-[9px] px-1 py-0.2 rounded-xs bg-accent-soft text-accent font-medium">Proyek</span>
+              <span v-if="v.isProject" class="text-[9px] px-1 py-0.2 rounded-xs bg-accent-soft text-accent font-medium">{{ t.projectBadge }}</span>
             </button>
             <button
               type="button"

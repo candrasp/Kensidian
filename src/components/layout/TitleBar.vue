@@ -18,6 +18,7 @@ import { useVaultStore } from '@/stores/vault'
 import { useTabsStore } from '@/stores/tabs'
 import { useUiStore } from '@/stores/ui'
 import { t } from '@/lib/i18n/id'
+import { modKey, altKey, fmt } from '@/lib/platform'
 import IconButton from '@/components/ui/IconButton.vue'
 
 const vaultStore = useVaultStore()
@@ -82,9 +83,9 @@ onUnmounted(() => {
     @dblclick="handleToggleMaximize"
   >
     <div class="flex items-center gap-0.5">
-      <IconButton :icon="PanelLeft" :label="uiStore.leftSidebarVisible ? t.hideLeftSidebar : t.showLeftSidebar" :active="uiStore.leftSidebarVisible" @click="uiStore.toggleLeftSidebar" />
-      <IconButton v-if="tabsStore.activePath && tabsStore.activePath !== PROJECT_DASHBOARD_PATH" :icon="ArrowLeft" :label="`${t.back} (Alt+←)`" :disabled="!tabsStore.canGoBack" @click="tabsStore.back" />
-      <IconButton v-if="tabsStore.activePath && tabsStore.activePath !== PROJECT_DASHBOARD_PATH" :icon="ArrowRight" :label="`${t.forward} (Alt+→)`" :disabled="!tabsStore.canGoForward" @click="tabsStore.forward" />
+      <IconButton :icon="PanelLeft" :label="`${uiStore.leftSidebarVisible ? t.hideLeftSidebar : t.showLeftSidebar} (${fmt(modKey, 'B')})`" :active="uiStore.leftSidebarVisible" @click="uiStore.toggleLeftSidebar" />
+      <IconButton v-if="tabsStore.activePath && tabsStore.activePath !== PROJECT_DASHBOARD_PATH" :icon="ArrowLeft" :label="`${t.back} (${fmt(altKey, '←')})`" :disabled="!tabsStore.canGoBack" @click="tabsStore.back" />
+      <IconButton v-if="tabsStore.activePath && tabsStore.activePath !== PROJECT_DASHBOARD_PATH" :icon="ArrowRight" :label="`${t.forward} (${fmt(altKey, '→')})`" :disabled="!tabsStore.canGoForward" @click="tabsStore.forward" />
       <IconButton v-if="tabsStore.activePath && tabsStore.activePath !== PROJECT_DASHBOARD_PATH" :icon="RotateCw" :label="t.refreshNote" @click="tabsStore.reloadCurrentNote()" />
       <IconButton :icon="HelpCircle" :label="t.helpAndAbout" @click="uiStore.modal = 'help'" />
     </div>

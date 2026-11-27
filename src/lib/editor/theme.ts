@@ -230,7 +230,7 @@ export const baseTheme = EditorView.theme({
   },
   '.cm-lp-strong': {
     fontWeight: '600',
-    color: 'rgba(224, 108, 117, 0.9)',
+    color: 'var(--strong)',
   },
   '.cm-lp-em': {
     fontStyle: 'italic',
@@ -242,9 +242,9 @@ export const baseTheme = EditorView.theme({
   '.cm-lp-code': {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.9em',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    color: '#a3be8c',
-    padding: '1px 1.5px',
+    backgroundColor: 'var(--bg-code)',
+    color: 'var(--syn-string)',
+    padding: '1px 3px',
     borderRadius: '3px',
   },
   '.cm-lp-highlight, .cm-lp-html-mark': {
@@ -330,7 +330,7 @@ export const baseTheme = EditorView.theme({
   '.cm-lp-quote': {
     borderLeft: '3px solid var(--accent)',
     paddingLeft: '12px',
-    backgroundColor: 'var(--bg-panel-alt)',
+    backgroundColor: 'var(--bg-code)',
     color: 'var(--fg-muted)',
   },
   '.cm-lp-hr': {
@@ -349,7 +349,7 @@ export const baseTheme = EditorView.theme({
     cursor: 'pointer',
   },
   '.cm-lp-codeblock': {
-    backgroundColor: 'var(--bg-panel-alt)',
+    backgroundColor: 'var(--bg-code)',
     borderLeft: '2px solid var(--line)',
     paddingLeft: '12px',
     fontFamily: 'var(--font-mono)',
@@ -366,7 +366,7 @@ export const baseTheme = EditorView.theme({
     justifyContent: 'space-between',
     gap: '8px',
     padding: '6px 12px',
-    backgroundColor: 'var(--bg-panel-alt)',
+    backgroundColor: 'var(--bg-code)',
     borderLeft: '2px solid var(--line)',
     borderTop: '1px solid var(--line)',
     borderRight: '1px solid var(--line)',
@@ -397,7 +397,7 @@ export const baseTheme = EditorView.theme({
   },
   '.cm-lp-codefoot': {
     height: '8px',
-    backgroundColor: 'var(--bg-panel-alt)',
+    backgroundColor: 'var(--bg-code)',
     borderLeft: '2px solid var(--line)',
     borderBottom: '1px solid var(--line)',
     borderRight: '1px solid var(--line)',

@@ -28,6 +28,9 @@ pub struct GitStatus {
     pub last_commit: Option<GitCommitInfo>,
     pub ahead: usize,
     pub behind: usize,
+    pub remote_url: Option<String>,
+    pub has_gitignore: bool,
+    pub unignored_heavy_dirs: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -93,6 +96,8 @@ pub struct ItemStyle {
 #[serde(rename_all = "camelCase")]
 pub struct VaultConfig {
     pub item_styles: std::collections::HashMap<String, ItemStyle>,
+    #[serde(default)]
+    pub is_project: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -158,4 +163,11 @@ pub struct SyncStatus {
     pub running: bool,
     pub progress: Option<SyncProgress>,
     pub last_result: Option<SyncResult>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IdeInfo {
+    pub id: String,
+    pub name: String,
 }

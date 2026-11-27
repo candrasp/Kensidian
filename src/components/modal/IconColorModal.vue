@@ -4,6 +4,7 @@ import { X, RotateCcw, Search } from 'lucide-vue-next'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import type { ItemStyle, IconColor, IconRef } from '@/lib/ipc/types'
 import { LUCIDE_ICONS, FA_BRAND_ICONS, COLOR_OPTIONS, COLOR_MAP } from '@/lib/icons'
+import { t } from '@/lib/i18n/id'
 
 const props = defineProps<{
   open: boolean
@@ -68,7 +69,7 @@ function handleApply() {
       <!-- Header -->
       <div class="flex items-center justify-between px-4 py-3 border-b border-line bg-panel">
         <div class="flex items-center gap-2">
-          <span class="font-semibold text-fg">Icon & Color</span>
+          <span class="font-semibold text-fg">{{ t.iconColorTitle }}</span>
           <span class="text-fg-faint">•</span>
           <span class="text-fg-muted truncate max-w-xs font-mono text-[11px]">{{ path }}</span>
         </div>
@@ -81,7 +82,7 @@ function handleApply() {
       <div class="p-4 border-b border-line bg-panel/40 flex flex-col gap-3">
         <!-- Palette Bar -->
         <div class="flex items-center justify-between">
-          <span class="text-[11px] font-semibold text-fg-muted uppercase tracking-wider">Warna Aksen</span>
+          <span class="text-[11px] font-semibold text-fg-muted uppercase tracking-wider">{{ t.accentColor }}</span>
           <div class="flex items-center gap-1.5">
             <button
               v-for="c in COLOR_OPTIONS"
@@ -104,7 +105,7 @@ function handleApply() {
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Cari ribuan icon (mis: folder, code, telegram, youtube, database...)"
+              :placeholder="t.searchIconPlaceholder"
               class="w-full bg-panel border border-line rounded px-8 py-1.5 text-xs text-fg outline-none focus:border-accent transition-colors"
             />
           </div>
@@ -114,21 +115,21 @@ function handleApply() {
               :class="['px-2.5 py-1 rounded text-xs transition-colors cursor-pointer', activeTab === 'all' ? 'bg-hover text-fg font-medium' : 'text-fg-muted hover:text-fg']"
               @click="activeTab = 'all'"
             >
-              All
+              {{ t.iconTabAll }}
             </button>
             <button
               type="button"
               :class="['px-2.5 py-1 rounded text-xs transition-colors cursor-pointer', activeTab === 'lucide' ? 'bg-hover text-fg font-medium' : 'text-fg-muted hover:text-fg']"
               @click="activeTab = 'lucide'"
             >
-              Lucide
+              {{ t.iconTabLucide }}
             </button>
             <button
               type="button"
               :class="['px-2.5 py-1 rounded text-xs transition-colors cursor-pointer', activeTab === 'brands' ? 'bg-hover text-fg font-medium' : 'text-fg-muted hover:text-fg']"
               @click="activeTab = 'brands'"
             >
-              Brands
+              {{ t.iconTabBrands }}
             </button>
           </div>
         </div>
@@ -185,14 +186,14 @@ function handleApply() {
           @click="handleReset"
         >
           <RotateCcw class="h-3.5 w-3.5" />
-          Reset Bawaan
+          {{ t.resetDefault }}
         </button>
         <div class="flex items-center gap-2">
           <button type="button" class="px-3.5 py-1.5 rounded text-xs text-fg-muted hover:bg-hover hover:text-fg transition-colors cursor-pointer" @click="emit('close')">
-            Batal
+            {{ t.cancel }}
           </button>
           <button type="button" class="px-4 py-1.5 rounded bg-accent text-xs font-medium text-white hover:bg-accent/90 transition-colors cursor-pointer" @click="handleApply">
-            Terapkan
+            {{ t.apply }}
           </button>
         </div>
       </div>
