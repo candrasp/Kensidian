@@ -19,6 +19,12 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/candrasp/Kensidian/releases/latest"><img src="https://img.shields.io/github/v/release/candrasp/Kensidian?style=flat-square&label=Release" alt="Latest Release" /></a>
+  <a href="https://github.com/candrasp/Kensidian/blob/main/LICENSE"><img src="https://img.shields.io/github/license/candrasp/Kensidian?style=flat-square&label=License" alt="License GPL-3.0" /></a>
+  <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-blue?style=flat-square" alt="Platform Windows, macOS, Linux" />
+</p>
+
+<p align="center">
   <img src="screenshot/hero.webp" alt="Kensidian Main View" />
 </p>
 
